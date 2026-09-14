@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess 5C - Arena</title>
+<style>
+body {
+background-color: #0d1117;
+color: #c9d1d9;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 100vh;
+margin: 0;
+overflow: hidden;
+}
+.arena-card {
+background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+border: 2px solid #30363d;
+border-radius: 16px;
+padding: 30px;
+text-align: center;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+width: 85%;
+max-width: 400px;
+}
+h2 {
+color: #58a6ff;
+margin-bottom: 20px;
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+button {
+background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+color: white;
+border: none;
+border-radius: 8px;
+padding: 14px 24px;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+width: 100%;
+margin-top: 15px;
+box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
+transition: transform 0.1s ease, background 0.2s;
+}
+button:active {
+transform: scale(0.97);
+}
+#status {
+margin-top: 20px;
+font-size: 14px;
+color: #8b949e;
+background: #21262d;
+padding: 10px;
+border-radius: 6px;
+border: 1px solid #30363d;
+}
+</style>
+</head>
+<body>
+
+<div class="arena-card">
+<h2>Chess 5C Arena</h2>
+<button id="connectBtn">Conectar Carteira</button>
+
+<div id="gameControls" style="display:none;">
+<button id="joinBtn">Entrar na Partida (0.05 USDC)</button>
+</div>
+
+<p id="status">Status: Aguardando conexão...</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
