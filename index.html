@@ -8,6 +8,7 @@
 <style>
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 body {
   background-color: #0d1117;
@@ -85,11 +86,11 @@ button:active {
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   width: 100%;
-  max-width: min(84vw, 84vh, 360px);
+  max-width: 360px;
   aspect-ratio: 1 / 1;
-  margin: 10px auto;
-  border: 3px solid #30363d;
-  border-radius: 6px;
+  margin: 12px auto;
+  border: 4px solid #30363d;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0,0,0,0.6);
   background-color: #30363d;
@@ -98,20 +99,40 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(22px, 6.5vw, 34px);
+  font-size: 34px;
   cursor: pointer;
   user-select: none;
   width: 100%;
   height: 100%;
+  position: relative;
 }
 .square.light {
-  background-color: #f0d9b5;
+  background-color: #ebecd0;
 }
 .square.dark {
-  background-color: #b58863;
+  background-color: #779952;
 }
 .square.selected {
-  background-color: #7b61ff !important;
+  background-color: #baca44 !important;
+  box-shadow: inset 0 0 0 3px #537031;
+}
+/* Destaque cirúrgico para casas onde a peça pode andar */
+.square.highlight::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+}
+.piece-w {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0,0,0,0.8);
+  font-weight: bold;
+}
+.piece-b {
+  color: #1a1a1a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 </style>
 </head>
@@ -138,17 +159,13 @@ button:active {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
 <script>
-const CONTRACT_ADDRESS = "SEU_CONTRATO_INTELIGENTE_AQUI"; 
 const USDC_ADDRESS = "0x8335200cd6164806ce600d99f850e08436282913";
-const USDC_ABI = [
-  "function transfer(address recipient, uint256 amount) returns (bool)"
-];
+const USDC_ABI = ["function transfer(address recipient, uint256 amount) returns (bool)"];
 
-let provider;
-let signer;
-let userAddress;
+let provider, signer, userAddress;
 let game = new Chess();
 let selectedSquare = null;
+let validMoves = [];
 
 const pieceSymbols = {
   p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
@@ -178,28 +195,19 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('friendlyBtn').addEventListener('click', () => {
-  startMatch("Modo Amistoso (Gratuito)");
-});
+document.getElementById('friendlyBtn').addEventListener('click', () => startMatch("Modo Amistoso (Gratuito)"));
 
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('status');
   if (!signer) return;
-
   try {
     statusEl.innerText = "Status: Preparando aposta na Rede Base...";
     const usdcContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
-    const valorAposta = ethers.parseUnits("0.05", 6);
-    
-    statusEl.innerText = "Status: Confirme a aposta de 0.05 USDC...";
-    const tx = await usdcContract.transfer(userAddress, valorAposta);
-
-    statusEl.innerText = "Status: Processando na blockchain Base...";
+    const tx = await usdcContract.transfer(userAddress, ethers.parseUnits("0.05", 6));
+    statusEl.innerText = "Status: Processando na blockchain...";
     await tx.wait();
-
-    startMatch("Arena Competitiva Iniciada (Valendo Pote)");
+    startMatch("Arena Competitiva Iniciada");
   } catch (error) {
-    console.error(error);
     statusEl.innerText = "Status: Transação cancelada ou falhou.";
   }
 });
@@ -216,6 +224,7 @@ function startMatch(statusMsg) {
   document.getElementById('boardContainer').style.display = "block";
   game.reset();
   selectedSquare = null;
+  validMoves = [];
   renderBoard();
 }
 
@@ -238,11 +247,16 @@ function renderBoard() {
         squareEl.classList.add('selected');
       }
 
+      if (validMoves.includes(squareCoord)) {
+        squareEl.classList.add('highlight');
+      }
+
       const piece = boardData[r][c];
       if (piece) {
-        squareEl.innerText = pieceSymbols[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
-        squareEl.style.color = piece.color === 'w' ? '#ffffff' : '#111111';
-        squareEl.style.textShadow = piece.color === 'w' ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 2px rgba(255,255,255,0.3)';
+        const pieceSpan = document.createElement('span');
+        pieceSpan.innerText = pieceSymbols[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
+        pieceSpan.className = piece.color === 'w' ? 'piece-w' : 'piece-b';
+        squareEl.appendChild(pieceSpan);
       }
 
       squareEl.addEventListener('click', () => handleSquareClick(squareCoord));
@@ -265,6 +279,9 @@ function handleSquareClick(square) {
     const piece = game.get(square);
     if (piece && piece.color === game.turn()) {
       selectedSquare = square;
+      // Pega os movimentos válidos para essa peça específica
+      const moves = game.moves({ square: square, verbose: true });
+      validMoves = moves.map(m => m.to);
       renderBoard();
     }
   } else {
@@ -275,12 +292,17 @@ function handleSquareClick(square) {
     });
 
     selectedSquare = null;
+    validMoves = [];
+    
     if (move) {
       renderBoard();
     } else {
+      // Se clicou em outra peça própria, muda a seleção
       const piece = game.get(square);
       if (piece && piece.color === game.turn()) {
         selectedSquare = square;
+        const moves = game.moves({ square: square, verbose: true });
+        validMoves = moves.map(m => m.to);
       }
       renderBoard();
     }
