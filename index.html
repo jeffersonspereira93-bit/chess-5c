@@ -74,9 +74,68 @@ border: 1px solid #30363d;
 <p id="status">Status: Aguardando conexão...</p>
 </div>
 
-<!-- Carrega a biblioteca Ethers primeiro -->
+<!-- Biblioteca Ethers.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-<!-- Carrega o script do jogo logo em seguida -->
-<script src="app.js"></script>
+
+<!-- Lógica do aplicativo integrada -->
+<script>
+const USDC_ADDRESS = "0x8335200cd6164806ce600d99f850e08436282913";
+const USDC_ABI = [
+  "function balanceOf(address account) view returns (uint256)",
+  "function transfer(address recipient, uint256 amount) returns (bool)"
+];
+
+let provider;
+let signer;
+let userAddress;
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('status');
+
+  if (typeof window.ethereum === 'undefined') {
+    statusEl.innerText = "Status: Carteira Web3 não encontrada! Abra pelo navegador da carteira.";
+    return;
+  }
+
+  try {
+    statusEl.innerText = "Status: Conectando à carteira...";
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+
+    statusEl.innerText = `Conectado: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}`;
+    document.getElementById('connectBtn').innerText = "Carteira Conectada";
+    document.getElementById('connectBtn').style.background = "#21262d";
+    document.getElementById('gameControls').style.display = "block";
+  } catch (error) {
+    console.error(error);
+    statusEl.innerText = "Status: Erro ao conectar carteira.";
+  }
+});
+
+document.getElementById('joinBtn')?.addEventListener('click', async () => {
+  const statusEl = document.getElementById('status');
+  if (!signer) return;
+
+  try {
+    statusEl.innerText = "Status: Preparando transação na Rede Base...";
+    const usdcContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+    const valorAposta = ethers.parseUnits("0.05", 6);
+    const destino = userAddress;
+
+    statusEl.innerText = "Status: Confirme a transação na sua carteira...";
+    const tx = await usdcContract.transfer(destino, valorAposta);
+
+    statusEl.innerText = "Status: Processando na blockchain...";
+    await tx.wait();
+
+    statusEl.innerText = "Status: Sucesso! Você entrou na partida.";
+  } catch (error) {
+    console.error(error);
+    statusEl.innerText = "Status: Transação cancelada ou falhou.";
+  }
+});
+</script>
 </body>
 </html>
