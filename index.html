@@ -156,7 +156,7 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
 
     statusEl.innerText = `Conectado: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}`;
     document.getElementById('connectBtn').innerText = "Carteira Conectada";
-    document.getElementById('connectBtn'].style.background = "#21262d";
+    document.getElementById('connectBtn').style.background = "#21262d";
     document.getElementById('gameModes').style.display = "block";
   } catch (error) {
     console.error(error);
@@ -164,12 +164,12 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
   }
 });
 
-// Modo Amistoso Gratuito Online (Sem custo, abre direto para jogar)
+// Modo Amistoso Gratuito Online
 document.getElementById('friendlyBtn').addEventListener('click', () => {
   startMatch("Modo Amistoso (Gratuito)");
 });
 
-// Arena Competitiva (Valendo 0.05 USDC via contrato inteligente)
+// Arena Competitiva (Valendo 0.05 USDC)
 document.getElementById('joinBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('status');
   if (!signer) return;
@@ -180,7 +180,7 @@ document.getElementById('joinBtn').addEventListener('click', async () => {
     const valorAposta = ethers.parseUnits("0.05", 6);
     
     statusEl.innerText = "Status: Confirme a aposta de 0.05 USDC...";
-    const tx = await usdcContract.transfer(userAddress, valorAposta); // Substituir pelo contrato de tesouraria em produção
+    const tx = await usdcContract.transfer(userAddress, valorAposta);
 
     statusEl.innerText = "Status: Processando na blockchain Base...";
     await tx.wait();
