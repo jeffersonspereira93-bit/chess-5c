@@ -1,9 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chess 5C - Arena</title>
+<title>Chess 5C - Arena Web3</title>
+<!-- Biblioteca de Xadrez (chess.js) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
 body {
 background-color: #0d1117;
@@ -12,58 +15,91 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 display: flex;
 flex-direction: column;
 align-items: center;
-justify-content: center;
-height: 100vh;
+justify-content: flex-start;
+min-height: 100vh;
 margin: 0;
-overflow: hidden;
+padding: 15px;
+box-sizing: border-box;
 }
-.arena-card {
+.arena-container {
 background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
 border: 2px solid #30363d;
 border-radius: 16px;
-padding: 30px;
+padding: 20px;
 text-align: center;
 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-width: 85%;
-max-width: 400px;
+width: 100%;
+max-width: 420px;
 }
 h2 {
 color: #58a6ff;
-margin-bottom: 20px;
+margin-bottom: 15px;
 letter-spacing: 1px;
 text-transform: uppercase;
+font-size: 20px;
 }
 button {
 background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
 color: white;
 border: none;
 border-radius: 8px;
-padding: 14px 24px;
-font-size: 16px;
+padding: 12px 20px;
+font-size: 15px;
 font-weight: bold;
 cursor: pointer;
 width: 100%;
-margin-top: 15px;
+margin-top: 10px;
 box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
-transition: transform 0.1s ease, background 0.2s;
+transition: transform 0.1s ease;
 }
 button:active {
 transform: scale(0.97);
 }
 #status {
-margin-top: 20px;
-font-size: 14px;
+margin: 15px 0;
+font-size: 13px;
 color: #8b949e;
 background: #21262d;
 padding: 10px;
 border-radius: 6px;
 border: 1px solid #30363d;
+word-break: break-all;
+}
+/* Estilo do Tabuleiro de Xadrez Mobile */
+#board {
+display: grid;
+grid-template-columns: repeat(8, 1fr);
+width: 100%;
+max-width: 360px;
+aspect-ratio: 1;
+margin: 15px auto;
+border: 3px solid #30363d;
+border-radius: 6px;
+overflow: hidden;
+box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.square {
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 28px;
+cursor: pointer;
+user-select: none;
+}
+.square.light {
+background-color: #f0d9b5;
+}
+.square.dark {
+background-color: #b58863;
+}
+.square.selected {
+background-color: #7b61ff !important;
 }
 </style>
 </head>
 <body>
 
-<div class="arena-card">
+<div class="arena-container">
 <h2>Chess 5C Arena</h2>
 <button id="connectBtn">Conectar Carteira</button>
 
@@ -72,12 +108,17 @@ border: 1px solid #30363d;
 </div>
 
 <p id="status">Status: Aguardando conexão...</p>
+
+<!-- Tabuleiro de Xadrez (inicialmente oculto até entrar na partida) -->
+<div id="boardContainer" style="display:none;">
+<div id="board"></div>
+<p id="turnInfo" style="font-size: 14px; color: #58a6ff; margin-top: 10px;">Vez das Brancas</p>
+</div>
 </div>
 
 <!-- Biblioteca Ethers.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
-<!-- Lógica do aplicativo integrada -->
 <script>
 const USDC_ADDRESS = "0x8335200cd6164806ce600d99f850e08436282913";
 const USDC_ABI = [
@@ -88,15 +129,21 @@ const USDC_ABI = [
 let provider;
 let signer;
 let userAddress;
+let game = new Chess();
+let selectedSquare = null;
+
+// Mapeamento de peças para símbolos de xadrez elegantes
+const pieceSymbols = {
+  p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+  P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
+};
 
 document.getElementById('connectBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('status');
-
   if (typeof window.ethereum === 'undefined') {
     statusEl.innerText = "Status: Carteira Web3 não encontrada! Abra pelo navegador da carteira.";
     return;
   }
-
   try {
     statusEl.innerText = "Status: Conectando à carteira...";
     provider = new ethers.BrowserProvider(window.ethereum);
@@ -114,7 +161,7 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('joinBtn')?.addEventListener('click', async () => {
+document.getElementById('joinBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('status');
   if (!signer) return;
 
@@ -122,20 +169,91 @@ document.getElementById('joinBtn')?.addEventListener('click', async () => {
     statusEl.innerText = "Status: Preparando transação na Rede Base...";
     const usdcContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
     const valorAposta = ethers.parseUnits("0.05", 6);
-    const destino = userAddress;
+    const destino = userAddress; // Tesouraria/Contrato no futuro
 
-    statusEl.innerText = "Status: Confirme a transação na sua carteira...";
+    statusEl.innerText = "Status: Confirme a aposta de 0.05 USDC...";
     const tx = await usdcContract.transfer(destino, valorAposta);
 
-    statusEl.innerText = "Status: Processando na blockchain...";
+    statusEl.innerText = "Status: Processando na blockchain Base...";
     await tx.wait();
 
-    statusEl.innerText = "Status: Sucesso! Você entrou na partida.";
+    statusEl.innerText = "Status: Partida iniciada com sucesso!";
+    document.getElementById('gameControls').style.display = "none";
+    document.getElementById('boardContainer').style.display = "block";
+    renderBoard();
   } catch (error) {
     console.error(error);
     statusEl.innerText = "Status: Transação cancelada ou falhou.";
   }
 });
+
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  const boardData = game.board();
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const squareEl = document.createElement('div');
+      const isDark = (r + c) % 2 === 1;
+      squareEl.className = `square ${isDark ? 'dark' : 'light'}`;
+      
+      const file = 'abcdefgh'[c];
+      const rank = '87654321'[r];
+      const squareCoord = file + rank;
+
+      if (selectedSquare === squareCoord) {
+        squareEl.classList.add('selected');
+      }
+
+      const piece = boardData[r][c];
+      if (piece) {
+        squareEl.innerText = pieceSymbols[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
+        squareEl.style.color = piece.color === 'w' ? '#fff' : '#000';
+      }
+
+      squareEl.addEventListener('click', () => handleSquareClick(squareCoord));
+      boardEl.appendChild(squareEl);
+    }
+  }
+
+  const turnText = game.turn() === 'w' ? "Vez das Brancas" : "Vez das Pretas";
+  if (game.in_checkmate()) {
+    document.getElementById('turnInfo').innerText = "Fim de Jogo: Xeque-Mate!";
+  } else if (game.in_draw()) {
+    document.getElementById('turnInfo').innerText = "Fim de Jogo: Empate!";
+  } else {
+    document.getElementById('turnInfo').innerText = turnText;
+  }
+}
+
+function handleSquareClick(square) {
+  if (!selectedSquare) {
+    const piece = game.get(square);
+    if (piece && piece.color === game.turn()) {
+      selectedSquare = square;
+      renderBoard();
+    }
+  } else {
+    const move = game.move({
+      from: selectedSquare,
+      to: square,
+      promotion: 'q' // Promoção automática para Dama por simplicidade mobile
+    });
+
+    selectedSquare = null;
+    if (move) {
+      renderBoard();
+    } else {
+      // Se o movimento for inválido, tenta selecionar a nova peça clicada
+      const piece = game.get(square);
+      if (piece && piece.color === game.turn()) {
+        selectedSquare = square;
+      }
+      renderBoard();
+    }
+  }
+}
 </script>
 </body>
 </html>
