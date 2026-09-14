@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Chess 5C - Arena Web3</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
 * {
   box-sizing: border-box;
@@ -79,14 +72,13 @@ button:active {
   flex-direction: column;
   align-items: center;
 }
-/* O Modelo Open Source Definitivo para o Tabuleiro (Garante 64 casas perfeitas) */
 #board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 100vw;
-  max-width: 340px;
-  height: 340px;
+  width: 100%;
+  max-width: 336px;
+  height: 336px;
   margin: 10px auto;
   border: 3px solid #30363d;
   border-radius: 6px;
@@ -98,16 +90,16 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 22px;
   cursor: pointer;
   user-select: none;
   position: relative;
 }
 .square.light {
-  background-color: #ebecd0;
+  background-color: #eee3d0;
 }
 .square.dark {
-  background-color: #779952;
+  background-color: #7d9a60;
 }
 .square.selected {
   background-color: #baca44 !important;
@@ -116,178 +108,18 @@ button:active {
 .square.highlight::after {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 50%;
 }
 .piece-w {
-  color: #ffffff;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9);
+  color: #f0f6fc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   font-weight: bold;
 }
 .piece-b {
-  color: #111111;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  color: #161b22;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 </style>
-</head>
-<body>
-
-<div class="arena-container">
-<h2>Chess 5C Arena</h2>
-<button id="connectBtn">Conectar Carteira</button>
-
-<div id="gameModes" style="display:none; width: 100%;">
-<button id="friendlyBtn" class="btn-secondary">Modo Amistoso (Gratuito)</button>
-<button id="joinBtn">Arena Competitiva (0.05 USDC)</button>
-</div>
-
-<p id="status">Status: Aguardando conexão...</p>
-
-<div id="boardContainer" style="display:none;">
-<div id="board"></div>
-<p id="turnInfo" style="font-size: 13px; color: #58a6ff; margin: 5px 0; font-weight: bold;">Vez das Brancas</p>
-<button id="exitBtn" class="btn-secondary" style="margin-top: 4px; padding: 8px; font-size: 12px;">Sair / Voltar</button>
-</div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-
-<script>
-const USDC_ADDRESS = "0x8335200cd6164806ce600d99f850e08436282913";
-const USDC_ABI = ["function transfer(address recipient, uint256 amount) returns (bool)"];
-
-let provider, signer, userAddress;
-let game = new Chess();
-let selectedSquare = null;
-let validMoves = [];
-
-const pieceSymbols = {
-  p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
-  P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
-};
-
-document.getElementById('connectBtn').addEventListener('click', async () => {
-  const statusEl = document.getElementById('status');
-  if (typeof window.ethereum === 'undefined') {
-    statusEl.innerText = "Status: Carteira não encontrada!";
-    return;
-  }
-  try {
-    statusEl.innerText = "Status: Conectando...";
-    provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-
-    statusEl.innerText = `Conectado: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}`;
-    document.getElementById('connectBtn').innerText = "Carteira Conectada";
-    document.getElementById('connectBtn').style.background = "#21262d";
-    document.getElementById('gameModes').style.display = "block";
-  } catch (error) {
-    statusEl.innerText = "Status: Erro na conexão.";
-  }
-});
-
-document.getElementById('friendlyBtn').addEventListener('click', () => startMatch("Modo Amistoso"));
-
-document.getElementById('joinBtn').addEventListener('click', async () => {
-  const statusEl = document.getElementById('status');
-  if (!signer) return;
-  try {
-    statusEl.innerText = "Status: Solicitando 0.05 USDC...";
-    const usdcContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
-    const tx = await usdcContract.transfer(userAddress, ethers.parseUnits("0.05", 6));
-    statusEl.innerText = "Status: Gravando na blockchain...";
-    await tx.wait();
-    startMatch("Arena Competitiva");
-  } catch (error) {
-    statusEl.innerText = "Status: Transação cancelada.";
-  }
-});
-
-document.getElementById('exitBtn').addEventListener('click', () => {
-  document.getElementById('boardContainer').style.display = "none";
-  document.getElementById('gameModes').style.display = "block";
-  document.getElementById('status').innerText = "Status: Conectado.";
-});
-
-function startMatch(statusMsg) {
-  document.getElementById('status').innerText = `Status: ${statusMsg}`;
-  document.getElementById('gameModes').style.display = "none";
-  document.getElementById('boardContainer').style.display = "block";
-  game.reset();
-  selectedSquare = null;
-  validMoves = [];
-  renderBoard();
-}
-
-function renderBoard() {
-  const boardEl = document.getElementById('board');
-  boardEl.innerHTML = '';
-  const boardData = game.board();
-
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const squareEl = document.createElement('div');
-      const isDark = (r + c) % 2 === 1;
-      squareEl.className = `square ${isDark ? 'dark' : 'light'}`;
-      
-      const file = 'abcdefgh'[c];
-      const rank = '87654321'[r];
-      const squareCoord = file + rank;
-
-      if (selectedSquare === squareCoord) squareEl.classList.add('selected');
-      if (validMoves.includes(squareCoord)) squareEl.classList.add('highlight');
-
-      const piece = boardData[r][c];
-      if (piece) {
-        const pieceSpan = document.createElement('span');
-        pieceSpan.innerText = pieceSymbols[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
-        pieceSpan.className = piece.color === 'w' ? 'piece-w' : 'piece-b';
-        squareEl.appendChild(pieceSpan);
-      }
-
-      squareEl.addEventListener('click', () => handleSquareClick(squareCoord));
-      boardEl.appendChild(squareEl);
-    }
-  }
-
-  const turnText = game.turn() === 'w' ? "Vez das Brancas" : "Vez das Pretas";
-  if (game.in_checkmate()) {
-    document.getElementById('turnInfo').innerText = "Fim de Jogo: Xeque-Mate!";
-  } else if (game.in_draw()) {
-    document.getElementById('turnInfo').innerText = "Fim de Jogo: Empate!";
-  } else {
-    document.getElementById('turnInfo').innerText = turnText;
-  }
-}
-
-function handleSquareClick(square) {
-  if (!selectedSquare) {
-    const piece = game.get(square);
-    if (piece && piece.color === game.turn()) {
-      selectedSquare = square;
-      validMoves = game.moves({ square: square, verbose: true }).map(m => m.to);
-      renderBoard();
-    }
-  } else {
-    const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
-    selectedSquare = null;
-    validMoves = [];
-    if (move) {
-      renderBoard();
-    } else {
-      const piece = game.get(square);
-      if (piece && piece.color === game.turn()) {
-        selectedSquare = square;
-        validMoves = game.moves({ square: square, verbose: true }).map(m => m.to);
-      }
-      renderBoard();
-    }
-  }
-}
-</script>
-</body>
-</html>
