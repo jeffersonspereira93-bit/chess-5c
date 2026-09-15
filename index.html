@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chess 5C - Arena Web3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="arena-container">
+<h2>Chess 5C Arena</h2>
+<button id="connectBtn">Conectar Carteira</button>
+<div id="gameModes" style="display:none; width: 100%;">
+<button id="friendlyBtn" class="btn-secondary">Modo Amistoso (Gratuito)</button>
+<button id="joinBtn">Arena Competitiva (0.05 USDC)</button>
+<button id="nftStoreBtn" class="btn-nft">Loja de Skins NFT (Em Breve)</button>
+</div>
+<p id="status">Status: Aguardando conexão...</p>
+<div id="boardContainer" style="display:none;">
+  <div class="player-panel">
+    <div class="player-info">👑 KingKong</div>
+    <div class="timer" id="timerBlack">10:00</div>
+  </div>
+  <div id="board"></div>
+  <div class="player-panel">
+    <div class="player-info">🛡️ Jefferson</div>
+    <div class="timer" id="timerWhite">10:00</div>
+  </div>
+  <button id="exitBtn" class="btn-secondary" style="margin-top: 6px; padding: 8px; font-size: 12px;">Sair / Voltar</button>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
