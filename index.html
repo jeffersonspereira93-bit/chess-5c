@@ -10,22 +10,28 @@
             --panel-bg: #131b2e;
             --neon-cyan: #00f3ff;
             --neon-purple: #b000ff;
+            --neon-green: #00ff66;
             --text-color: #e0e6ed;
             --border-glow: 0 0 10px rgba(0, 243, 255, 0.4);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 15px; }
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { font-size: 1.8rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); letter-spacing: 2px; }
-        .status-container { font-size: 0.9rem; color: #8a99ad; margin-top: 5px; }
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-align: center; text-transform: uppercase; }
+        header { text-align: center; margin-bottom: 15px; }
+        h1 { font-size: 1.6rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); letter-spacing: 2px; }
+        .status-container { font-size: 0.85rem; color: #8a99ad; margin-top: 3px; }
+        .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .hidden { display: none !important; }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-align: center; text-transform: uppercase; }
         .btn-cyber:hover { background-color: var(--neon-cyan); color: var(--bg-color); box-shadow: 0 0 15px var(--neon-cyan); }
-        #board-container { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
-        .square { display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; user-select: none; }
+        .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
+        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; }
+        #board-container { width: 100%; aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: 2.1rem; cursor: pointer; user-select: none; position: relative; }
         .square.light { background-color: #1e293b; }
         .square.dark { background-color: #0f172a; }
-        footer { margin-top: 20px; font-size: 0.8rem; color: #64748b; text-align: center; }
+        .square.selected { background-color: rgba(0, 243, 255, 0.4) !important; box-shadow: inset 0 0 8px var(--neon-cyan); }
+        footer { margin-top: 15px; font-size: 0.75rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
@@ -33,18 +39,28 @@
         <h1>CHESS 5C ARENA</h1>
         <div class="status-container">Status: <span style="color: var(--neon-cyan);">Cyber Node Online</span></div>
     </header>
-    <div class="menu-panel">
-        <button class="btn-cyber" onclick="alert('Modo Amistoso Iniciado!')">Modo Amistoso (Gratuito)</button>
-        <button class="btn-cyber" onclick="alert('Arena Competitiva Iniciada!')">Arena Competitiva (0.05 USDC)</button>
-        <button class="btn-cyber" style="border-color: var(--neon-purple); color: var(--neon-purple);" onclick="alert('Loja NFT em breve!')">Loja de Skins NFT (Em Breve)</button>
+    <div id="screen-lobby" class="screen">
+        <div class="menu-panel">
+            <button class="btn-cyber" onclick="enterGame('friendly')">Modo Amistoso (Gratuito)</button>
+            <button class="btn-cyber" onclick="enterGame('competitive')">Arena Competitiva (0.05 USDC)</button>
+            <button class="btn-cyber btn-secondary" onclick="openSkinShop()">Loja de Skins NFT (Em Breve)</button>
+        </div>
     </div>
-    <div id="board-container"></div>
-    <footer>Chess 5C Arena &bull; Cyberpunk Edition</footer>
+    <div id="screen-game" class="screen hidden">
+        <div class="game-hud">
+            <span id="turn-indicator">Turno: Brancas</span>
+            <button class="btn-cyber" style="padding: 6px 12px; font-size: 0.75rem;" onclick="returnToLobby()">Sair / Lobby</button>
+        </div>
+        <div id="board-container"></div>
+        <div id="match-status" style="font-size: 0.85rem; color: var(--neon-cyan);">Selecione uma peça para mover</div>
+    </div>
+    <footer>Chess 5C Arena &bull; Web3 Protocol &bull; Cyberpunk Edition</footer>
     <script>
-        function createBoard() {
-            const board = document.getElementById('board-container');
-            board.innerHTML = '';
-            const pieces = [
+        let boardState = [];
+        let selectedSquare = null;
+        let currentTurn = 'white';
+        function initBoardData() {
+            boardState = [
                 ["♜","♞","♝","♛","♚","♝","♞","♜"],
                 ["♟","♟","♟","♟","♟","♟","♟","♟"],
                 ["","","","","","","",""],
@@ -54,16 +70,54 @@
                 ["♙","♙","♙","♙","♙","♙","♙","♙"],
                 ["♖","♘","♗","♕","♔","♗","♘","♖"]
             ];
+        }
+        function enterGame(mode) {
+            if(mode === 'competitive') alert('Simulando aprovação de smart contract: 0.05 USDC escrow locked.');
+            document.getElementById('screen-lobby').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            initBoardData();
+            renderBoard();
+        }
+        function returnToLobby() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-lobby').classList.remove('hidden');
+        }
+        function renderBoard() {
+            const boardEl = document.getElementById('board-container');
+            boardEl.innerHTML = '';
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const sq = document.createElement('div');
-                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    sq.textContent = pieces[r][c];
-                    board.appendChild(sq);
+                    sq.className = 'square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+                    const piece = boardState[r][c];
+                    if (piece) {
+                        sq.textContent = piece;
+                        sq.style.color = "♙♖♘♗♕♔".includes(piece) ? "#e0e6ed" : "#00f3ff";
+                    }
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
+                    sq.onclick = () => handleSquareClick(r, c);
+                    boardEl.appendChild(sq);
                 }
             }
+            document.getElementById('turn-indicator').textContent = 'Turno: ' + (currentTurn === 'white' ? 'Brancas' : 'Pretas');
         }
-        window.onload = createBoard;
+        function handleSquareClick(r, c) {
+            const p = boardState[r][c];
+            if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) { selectedSquare = null; renderBoard(); return; }
+            if (selectedSquare) {
+                if (p && ("♙♖♘♗♕♔".includes(p) === "♙♖♘♗♕♔".includes(boardState[selectedSquare.r][selectedSquare.c]))) {
+                    selectedSquare = {r, c}; renderBoard(); return;
+                }
+                boardState[r][c] = boardState[selectedSquare.r][selectedSquare.c];
+                boardState[selectedSquare.r][selectedSquare.c] = "";
+                selectedSquare = null;
+                currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                renderBoard();
+                return;
+            }
+            if (p) { selectedSquare = {r, c}; renderBoard(); }
+        }
+        function openSkinShop() { alert('Loja de Skins NFT em breve!'); }
     </script>
 </body>
 </html>
