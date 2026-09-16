@@ -1,36 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Chess 5C - Arena Web3</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess 5C Arena | Cyberpunk Edition</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #131b2e;
+            --neon-cyan: #00f3ff;
+            --neon-purple: #b000ff;
+            --text-color: #e0e6ed;
+            --border-glow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 15px; }
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); letter-spacing: 2px; }
+        .status-container { font-size: 0.9rem; color: #8a99ad; margin-top: 5px; }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-align: center; text-transform: uppercase; }
+        .btn-cyber:hover { background-color: var(--neon-cyan); color: var(--bg-color); box-shadow: 0 0 15px var(--neon-cyan); }
+        #board-container { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; user-select: none; }
+        .square.light { background-color: #1e293b; }
+        .square.dark { background-color: #0f172a; }
+        footer { margin-top: 20px; font-size: 0.8rem; color: #64748b; text-align: center; }
+    </style>
 </head>
 <body>
-<div class="arena-container">
-<h2>Chess 5C Arena</h2>
-<button id="connectBtn">Conectar Carteira</button>
-<div id="gameModes" style="display:none; width: 100%;">
-<button id="friendlyBtn" class="btn-secondary">Modo Amistoso (Gratuito)</button>
-<button id="joinBtn">Arena Competitiva (0.05 USDC)</button>
-<button id="nftStoreBtn" class="btn-nft">Loja de Skins NFT (Em Breve)</button>
-</div>
-<p id="status">Status: Aguardando conexão...</p>
-<div id="boardContainer" style="display:none;">
-  <div class="player-panel">
-    <div class="player-info">👑 KingKong</div>
-    <div class="timer" id="timerBlack">10:00</div>
-  </div>
-  <div id="board"></div>
-  <div class="player-panel">
-    <div class="player-info">🛡️ Jefferson</div>
-    <div class="timer" id="timerWhite">10:00</div>
-  </div>
-  <button id="exitBtn" class="btn-secondary" style="margin-top: 6px; padding: 8px; font-size: 12px;">Sair / Voltar</button>
-</div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-<script src="game.js"></script>
+    <header>
+        <h1>CHESS 5C ARENA</h1>
+        <div class="status-container">Status: <span style="color: var(--neon-cyan);">Cyber Node Online</span></div>
+    </header>
+    <div class="menu-panel">
+        <button class="btn-cyber" onclick="alert('Modo Amistoso Iniciado!')">Modo Amistoso (Gratuito)</button>
+        <button class="btn-cyber" onclick="alert('Arena Competitiva Iniciada!')">Arena Competitiva (0.05 USDC)</button>
+        <button class="btn-cyber" style="border-color: var(--neon-purple); color: var(--neon-purple);" onclick="alert('Loja NFT em breve!')">Loja de Skins NFT (Em Breve)</button>
+    </div>
+    <div id="board-container"></div>
+    <footer>Chess 5C Arena &bull; Cyberpunk Edition</footer>
+    <script>
+        function createBoard() {
+            const board = document.getElementById('board-container');
+            board.innerHTML = '';
+            const pieces = [
+                ["♜","♞","♝","♛","♚","♝","♞","♜"],
+                ["♟","♟","♟","♟","♟","♟","♟","♟"],
+                ["","","","","","","",""],
+                ["","","","","","","",""],
+                ["","","","","","","",""],
+                ["","","","","","","",""],
+                ["♙","♙","♙","♙","♙","♙","♙","♙"],
+                ["♖","♘","♗","♕","♔","♗","♘","♖"]
+            ];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    sq.textContent = pieces[r][c];
+                    board.appendChild(sq);
+                }
+            }
+        }
+        window.onload = createBoard;
+    </script>
 </body>
 </html>
