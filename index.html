@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chess 5C Arena | Cyberpunk Edition</title>
     <style>
         :root {
@@ -10,42 +10,43 @@
             --panel-bg: #131b2e;
             --neon-cyan: #00f3ff;
             --neon-purple: #b000ff;
-            --neon-green: #00ff66;
             --text-color: #e0e6ed;
-            --border-glow: 0 0 10px rgba(0, 243, 255, 0.4);
+            --border-glow: 0 0 8px rgba(0, 243, 255, 0.3);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 12px; }
-        header { text-align: center; margin-bottom: 10px; }
-        h1 { font-size: 1.5rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); letter-spacing: 2px; }
-        .status-container { font-size: 0.8rem; color: #8a99ad; margin-top: 2px; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 8px; overflow-x: hidden; }
         
-        .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
+        h1 { font-size: 1.15rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1px; }
+        .node-tag { font-size: 0.7rem; color: #00ff66; background: rgba(0,255,102,0.1); border: 1px solid rgba(0,255,102,0.3); padding: 2px 6px; border-radius: 4px; }
+
+        .screen { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .hidden { display: none !important; }
 
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
-        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-align: center; text-transform: uppercase; }
-        .btn-cyber:hover { background-color: var(--neon-cyan); color: var(--bg-color); box-shadow: 0 0 15px var(--neon-cyan); }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 10px; padding: 16px; width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 40px; }
+        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
+        .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
-        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; }
+        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; }
         
-        /* Tabuleiro Dark Cyberpunk com casas clássicas nítidas 1:1 */
-        #board-container { width: 100%; aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 6px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
+        /* Tabuleiro otimizado para não cortar bordas e maximizar área útil */
+        #board-container { width: min(94vw, 400px); aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 12px rgba(176, 0, 255, 0.35); border-radius: 6px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; margin: 4px auto; }
         
-        .square { display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; user-select: none; position: relative; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.4rem, 6vw, 2.1rem); cursor: pointer; user-select: none; position: relative; width: 100%; height: 100%; }
         .square.light { background-color: #24344d; }
         .square.dark { background-color: #111827; }
-        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 12px var(--neon-cyan); }
+        .square.selected { background-color: rgba(0, 243, 255, 0.5) !important; box-shadow: inset 0 0 10px var(--neon-cyan); }
 
-        footer { margin-top: 12px; font-size: 0.75rem; color: #64748b; text-align: center; }
+        #match-status { font-size: 0.75rem; color: var(--neon-cyan); text-align: center; height: 16px; }
+        footer { margin-top: 8px; font-size: 0.7rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>CHESS 5C ARENA</h1>
-        <div class="status-container">Status: <span style="color: var(--neon-cyan);">Cyber Node Online</span></div>
+        <h1>CHESS 5C</h1>
+        <span class="node-tag">ONLINE</span>
     </header>
 
     <div id="screen-lobby" class="screen">
@@ -59,13 +60,13 @@
     <div id="screen-game" class="screen hidden">
         <div class="game-hud">
             <span id="turn-indicator">Turno: Brancas</span>
-            <button class="btn-cyber" style="padding: 6px 12px; font-size: 0.75rem;" onclick="returnToLobby()">Sair / Lobby</button>
+            <button class="btn-cyber" style="padding: 4px 10px; font-size: 0.7rem;" onclick="returnToLobby()">Lobby</button>
         </div>
         <div id="board-container"></div>
-        <div id="match-status" style="font-size: 0.8rem; color: var(--neon-cyan);">Selecione uma peça para mover</div>
+        <div id="match-status">Toque em uma peça</div>
     </div>
 
-    <footer>Chess 5C Arena &bull; Web3 Protocol &bull; Cyberpunk Edition</footer>
+    <footer>Chess 5C Arena &bull; Cyberpunk Edition</footer>
 
     <script>
         let boardState = [];
@@ -73,7 +74,6 @@
         let currentTurn = 'white';
 
         function initBoardData() {
-            // Configuração clássica de xadrez 8x8 com o miolo limpo (linhas 2 a 5 vazias no centro)
             boardState = [
                 ["♜","♞","♝","♛","♚","♝","♞","♜"],
                 ["♟","♟","♟","♟","♟","♟","♟","♟"],
@@ -111,7 +111,7 @@
                         sq.textContent = piece;
                         const isWhite = "♙♖♘♗♕♔".includes(piece);
                         sq.style.color = isWhite ? '#e0e6ed' : '#00f3ff';
-                        sq.style.textShadow = isWhite ? '0 0 6px rgba(224,230,237,0.7)' : '0 0 10px rgba(0,243,255,0.9)';
+                        sq.style.textShadow = isWhite ? '0 0 5px rgba(224,230,237,0.6)' : '0 0 8px rgba(0,243,255,0.8)';
                     }
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
                     sq.onclick = () => handleSquareClick(r, c);
@@ -134,10 +134,15 @@
                 boardState[selectedSquare.r][selectedSquare.c] = "";
                 selectedSquare = null;
                 currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                document.getElementById('match-status').textContent = 'Movimento realizado';
                 renderBoard();
                 return;
             }
-            if (p) { selectedSquare = {r, c}; renderBoard(); }
+            if (p) { 
+                selectedSquare = {r, c}; 
+                document.getElementById('match-status').textContent = `Selecionado [${r+1},${c+1}]`;
+                renderBoard(); 
+            }
         }
 
         function openSkinShop() { alert('Loja de Skins NFT em breve!'); }
