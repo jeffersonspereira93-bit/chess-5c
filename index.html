@@ -29,12 +29,14 @@
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
         .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; }
-        #board-container { width: 100%; aspect-ratio: 1 / 1; background: #2a1616; border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 6px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
         
-        .square { display: flex; align-items: center; justify-content: center; font-size: 1.85rem; cursor: pointer; user-select: none; position: relative; }
-        .square.light { background-color: #8b3a3a; }
-        .square.dark { background-color: #5c2424; }
-        .square.selected { background-color: rgba(0, 243, 255, 0.5) !important; box-shadow: inset 0 0 10px var(--neon-cyan); }
+        /* Tabuleiro Dark Cyberpunk com casas clássicas nítidas 1:1 */
+        #board-container { width: 100%; aspect-ratio: 1 / 1; background: var(--panel-bg); border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 6px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); overflow: hidden; }
+        
+        .square { display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; user-select: none; position: relative; }
+        .square.light { background-color: #24344d; }
+        .square.dark { background-color: #111827; }
+        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 12px var(--neon-cyan); }
 
         footer { margin-top: 12px; font-size: 0.75rem; color: #64748b; text-align: center; }
     </style>
@@ -71,7 +73,7 @@
         let currentTurn = 'white';
 
         function initBoardData() {
-            // Layout densificado estilo tático (2 fileiras densas no topo, 2 embaixo, miolo 4 fileiras de combate)
+            // Configuração clássica de xadrez 8x8 com o miolo limpo (linhas 2 a 5 vazias no centro)
             boardState = [
                 ["♜","♞","♝","♛","♚","♝","♞","♜"],
                 ["♟","♟","♟","♟","♟","♟","♟","♟"],
@@ -108,8 +110,8 @@
                     if (piece) {
                         sq.textContent = piece;
                         const isWhite = "♙♖♘♗♕♔".includes(piece);
-                        sq.style.color = isWhite ? '#ffffff' : '#00f3ff';
-                        sq.style.textShadow = isWhite ? '0 0 6px rgba(255,255,255,0.7)' : '0 0 8px rgba(0,243,255,0.8)';
+                        sq.style.color = isWhite ? '#e0e6ed' : '#00f3ff';
+                        sq.style.textShadow = isWhite ? '0 0 6px rgba(224,230,237,0.7)' : '0 0 10px rgba(0,243,255,0.9)';
                     }
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
                     sq.onclick = () => handleSquareClick(r, c);
