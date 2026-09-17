@@ -127,17 +127,81 @@
         let userAddress = null;
         let activeMode = 'friendly';
         let escrowLocked = false;
+        let audioCtx = null;
 
-        const BASE_CHAIN_ID = '0x2105'; // Base Mainnet (8453) ou use teste se preferir
+        const BASE_CHAIN_ID = '0x2105';
         const ESCROW_CONTRACT_MOCK = '0x71C...Chess5CBaseEscrow';
-        const USDC_BASE_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
         const pieceGlyphs = {
             p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
             P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
         };
 
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSFX(type) {
+            initAudio();
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'select') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(660, now + 0.05);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.06);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } else if (type === 'move') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.09);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            } else if (type === 'capture') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.15);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.16);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            } else if (type === 'check') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.setValueAtTime(440, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'escrow') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                osc.frequency.setValueAtTime(783.99, now + 0.16);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+        }
+
         async function connectWallet() {
+            initAudio();
             if (window.ethereum) {
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -148,16 +212,13 @@
                         document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
                         document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
                         document.getElementById('escrow-status-banner').textContent = `⚡ Base Network Conectada (${shortAddr})`;
-                        
-                        // Opcional: checar switch chain base
+                        playSFX('select');
                         try {
                             await window.ethereum.request({
                                 method: 'wallet_switchEthereumChain',
                                 params: [{ chainId: BASE_CHAIN_ID }]
                             });
-                        } catch (e) {
-                            console.log('Chain switch opcional ignorada ou não suportada');
-                        }
+                        } catch (e) {}
                     }
                 } catch (err) {
                     alert('Conexão recusada pela carteira.');
@@ -168,32 +229,27 @@
                 document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
                 document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
                 document.getElementById('escrow-status-banner').textContent = `⚡ Web3 Simulado (Modo Fallback)`;
+                playSFX('select');
             }
         }
 
         async function triggerOnChainEscrowLock() {
-            if (window.ethereum && userAddress && userAddress.startsWith('0x') && userAddress.length > 10) {
-                // Exemplo estrutural de requisição de assinatura/transação de aprovação/transferência USDC
-                // Aqui simulamos o fluxo Web3 seguro de smart contract escrow lock
-                const confirmed = confirm(`[BASE NETWORK ESCROW]\nContrato: ${ESCROW_CONTRACT_MOCK}\nToken: USDC (0.05)\nCarteira: ${userAddress}\nConfirmar assinatura de travamento de fundos?`);
-                if (!confirmed) return false;
-                escrowLocked = true;
-                return true;
-            } else {
-                const confirmed = confirm("Confirmar Escrow Simulado de 0.05 USDC no Smart Contract da Arena Competitiva (Base Network)?");
-                if (!confirmed) return false;
-                escrowLocked = true;
-                return true;
-            }
+            const confirmed = confirm(`[BASE NETWORK ESCROW]\nContrato: ${ESCROW_CONTRACT_MOCK}\nToken: USDC (0.05)\nCarteira: ${userAddress || 'Simulada'}\nConfirmar assinatura de travamento de fundos?`);
+            if (!confirmed) return false;
+            escrowLocked = true;
+            playSFX('escrow');
+            return true;
         }
 
         async function enterGame(mode) {
+            initAudio();
             activeMode = mode;
             if (mode === 'competitive') {
                 const locked = await triggerOnChainEscrowLock();
                 if (!locked) return;
             } else {
                 escrowLocked = false;
+                playSFX('select');
             }
             document.getElementById('screen-lobby').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
@@ -205,17 +261,19 @@
         }
 
         function returnToLobby() {
+            initAudio();
             if (activeMode === 'competitive' && escrowLocked && !game.in_checkmate()) {
                 const leave = confirm("Aviso: Sair da partida competitiva com escrow ativo pode penalizar reputação on-chain. Deseja sair?");
                 if (!leave) return;
             }
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
+            playSFX('select');
         }
 
         function algebraicToIndex(sq) {
             const file = sq.charCodeAt(0) - 'a'.charCodeAt(0);
-            const rank = 8 - parseInt(sq[1], 10);
+            const rank = 8 - parseInt(sq, 10);
             return { r: rank, c: file };
         }
 
@@ -273,9 +331,13 @@
             if (game.in_checkmate()) {
                 statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
                 if (escrowLocked) statusText += ' 💰 (Escrow liberado on-chain)';
+                playSFX('escrow');
             }
             else if (game.in_draw()) statusText = 'Empate (Afogamento/Repetição)!';
-            else if (game.in_check()) statusText += ' ⚠️ XEQUE!';
+            else if (game.in_check()) {
+                statusText += ' ⚠️ XEQUE!';
+                playSFX('check');
+            }
 
             document.getElementById('turn-indicator').textContent = statusText;
             document.getElementById('match-status').textContent = game.in_checkmate() ? 'Fim de jogo - Settlement concluído' : 'Selecione uma peça válida';
@@ -287,6 +349,7 @@
         }
 
         function handleSquareClick(r, c) {
+            initAudio();
             const sqAlg = indexToAlgebraic(r, c);
 
             if (selectedSquare) {
@@ -306,6 +369,9 @@
                             if (moveResult.color === 'w') capturedBlack.push(capGlyph);
                             else capturedWhite.push(capGlyph);
                             updateCapturesUI();
+                            playSFX('capture');
+                        } else {
+                            playSFX('move');
                         }
                         selectedSquare = null;
                         renderBoard();
@@ -318,6 +384,7 @@
             const cell = boardData[r][c];
             if (cell && cell.color === game.turn()) {
                 selectedSquare = { r, c };
+                playSFX('select');
                 renderBoard();
             } else {
                 selectedSquare = null;
@@ -325,7 +392,10 @@
             }
         }
 
-        function openSkinShop() { alert('Loja de Skins NFT em breve!'); }
+        function openSkinShop() { 
+            initAudio();
+            alert('Loja de Skins NFT em breve!'); 
+        }
     </script>
 </body>
 </html>
