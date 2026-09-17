@@ -10,44 +10,47 @@
             --panel-bg: #131b2e;
             --neon-cyan: #00f3ff;
             --neon-purple: #b000ff;
+            --neon-green: #00ff66;
             --text-color: #e0e6ed;
             --border-glow: 0 0 10px rgba(0, 243, 255, 0.35);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 10px; overflow-x: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 8px; overflow-x: hidden; }
         
-        header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px; }
-        h1 { font-size: 1.25rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.5px; }
-        .node-tag { font-size: 0.75rem; color: #00ff66; background: rgba(0,255,102,0.12); border: 1px solid rgba(0,255,102,0.35); padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
+        h1 { font-size: 1.2rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.5px; }
+        .node-tag { font-size: 0.7rem; color: #00ff66; background: rgba(0,255,102,0.12); border: 1px solid rgba(0,255,102,0.35); padding: 3px 6px; border-radius: 4px; font-weight: bold; }
 
-        .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .hidden { display: none !important; }
 
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 50px; }
-        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 40px; }
+        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.90rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
         .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
-        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; }
+        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; }
         
-        /* Grid perfeitamente esquadrinhado 1:1 com células simétricas */
-        .board-wrapper { width: min(94vw, 400px); aspect-ratio: 1 / 1; border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; overflow: hidden; background: var(--panel-bg); margin: 6px auto; }
+        .board-wrapper { width: min(94vw, 392px); aspect-ratio: 1 / 1; border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; overflow: hidden; background: var(--panel-bg); margin: 4px auto; }
         #board-container { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); }
         
-        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.5rem, 5.8vw, 2.2rem); cursor: pointer; user-select: none; width: 100%; height: 100%; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.4rem, 5.5vw, 2.1rem); cursor: pointer; user-select: none; width: 100%; height: 100%; position: relative; }
         .square.light { background-color: #24344d; }
         .square.dark { background-color: #111827; }
-        .square.selected { background-color: rgba(0, 243, 255, 0.5) !important; box-shadow: inset 0 0 12px var(--neon-cyan); }
+        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 12px var(--neon-cyan); }
+        .square.valid-move::after { content: ''; width: 10px; height: 10px; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 8px var(--neon-green); opacity: 0.9; }
 
-        #match-status { font-size: 0.8rem; color: var(--neon-cyan); text-align: center; min-height: 18px; }
-        footer { margin-top: 10px; font-size: 0.75rem; color: #64748b; text-align: center; }
+        .hud-bottom { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: #8a99ad; }
+        .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 4px 8px; border-radius: 6px; min-height: 28px; align-items: center; }
+        #match-status { font-size: 0.8rem; color: var(--neon-cyan); text-align: center; }
+        footer { margin-top: 6px; font-size: 0.7rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>CHESS 5C ARENA</h1>
-        <span class="node-tag">ONLINE</span>
+        <span class="node-tag">FASE 1: MOTOR</span>
     </header>
 
     <div id="screen-lobby" class="screen">
@@ -61,12 +64,18 @@
     <div id="screen-game" class="screen hidden">
         <div class="game-hud">
             <span id="turn-indicator">Turno: Brancas</span>
-            <button class="btn-cyber" style="padding: 5px 12px; font-size: 0.75rem;" onclick="returnToLobby()">Lobby</button>
+            <button class="btn-cyber" style="padding: 4px 10px; font-size: 0.7rem;" onclick="returnToLobby()">Lobby</button>
         </div>
         <div class="board-wrapper">
             <div id="board-container"></div>
         </div>
-        <div id="match-status">Toque em uma peça para mover</div>
+        <div class="hud-bottom">
+            <div id="match-status">Selecione uma peça válida</div>
+            <div class="captures-row">
+                <span>Derrubadas (Brancas): <strong id="caps-white" style="color:var(--neon-cyan)">-</strong></span>
+                <span>Derrubadas (Pretas): <strong id="caps-black" style="color:#fff">-</strong></span>
+            </div>
+        </div>
     </div>
 
     <footer>Chess 5C Arena &bull; Cyberpunk Edition</footer>
@@ -75,6 +84,9 @@
         let boardState = [];
         let selectedSquare = null;
         let currentTurn = 'white';
+        let validMoves = [];
+        let capturedWhite = [];
+        let capturedBlack = [];
 
         function initBoardData() {
             boardState = [
@@ -87,6 +99,9 @@
                 ["♙","♙","♙","♙","♙","♙","♙","♙"],
                 ["♖","♘","♗","♕","♔","♗","♘","♖"]
             ];
+            capturedWhite = [];
+            capturedBlack = [];
+            updateCapturesUI();
         }
 
         function enterGame(mode) {
@@ -102,21 +117,110 @@
             document.getElementById('screen-lobby').classList.remove('hidden');
         }
 
+        function isWhitePiece(p) { return "♙♖♘♗♕♔".includes(p); }
+        function isBlackPiece(p) { return "♟♜♞♝♛♚".includes(p); }
+
+        function getValidMoves(r, c) {
+            const piece = boardState[r][c];
+            if (!piece) return [];
+            const isWhite = isWhitePiece(piece);
+            const moves = [];
+            const dir = isWhite ? -1 : 1;
+
+            if (piece === '♙' || piece === '♟') {
+                // Avanço 1 casa
+                const r1 = r + dir;
+                if (r1 >= 0 && r1 < 8 && boardState[r1][c] === "") {
+                    moves.push({r: r1, c: c});
+                    // Duplo inicial
+                    const startRow = isWhite ? 6 : 1;
+                    const r2 = r + 2 * dir;
+                    if (r === startRow && boardState[r2][c] === "") {
+                        moves.push({r: r2, c: c});
+                    }
+                }
+                // Captura diagonal
+                [c - 1, c + 1].forEach(targetC => {
+                    const r1 = r + dir;
+                    if (r1 >= 0 && r1 < 8 && targetC >= 0 && targetC < 8) {
+                        const target = boardState[r1][targetC];
+                        if (target && isWhitePiece(target) !== isWhite) {
+                            moves.push({r: r1, c: targetC});
+                        }
+                    }
+                });
+            } else if (piece === '♘' || piece === '♞') {
+                const knightSteps = [
+                    [-2,-1],[-2,1],[-1,-2],[-1,2],
+                    [1,-2],[1,2],[2,-1],[2,1]
+                ];
+                knightSteps.forEach(([dr, dc]) => {
+                    const nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        const target = boardState[nr][nc];
+                        if (!target || isWhitePiece(target) !== isWhite) {
+                            moves.push({r: nr, c: nc});
+                        }
+                    }
+                });
+            } else if (piece === '♔' || piece === '♚') {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                            const target = boardState[nr][nc];
+                            if (!target || isWhitePiece(target) !== isWhite) {
+                                moves.push({r: nr, c: nc});
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Torre, Bispo, Dama (direções lineares simplificadas para cerco ágil)
+                const dirs = [];
+                if ("♖♜♕♛".includes(piece)) dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+                if ("♗♝♕♛".includes(piece)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+                dirs.forEach(([dr, dc]) => {
+                    let nr = r + dr, nc = c + dc;
+                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        const target = boardState[nr][nc];
+                        if (!target) {
+                            moves.push({r: nr, c: nc});
+                        } else {
+                            if (isWhitePiece(target) !== isWhite) {
+                                moves.push({r: nr, c: nc});
+                            }
+                            break;
+                        }
+                        nr += dr; nc += dc;
+                    }
+                });
+            }
+            return moves;
+        }
+
         function renderBoard() {
             const boardEl = document.getElementById('board-container');
             boardEl.innerHTML = '';
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const sq = document.createElement('div');
-                    sq.className = 'square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+                    const isLight = (r + c) % 2 === 0;
+                    sq.className = `square ${isLight ? 'light' : 'dark'}`;
                     const piece = boardState[r][c];
                     if (piece) {
                         sq.textContent = piece;
-                        const isWhite = "♙♖♘♗♕♔".includes(piece);
-                        sq.style.color = isWhite ? '#e0e6ed' : '#00f3ff';
-                        sq.style.textShadow = isWhite ? '0 0 6px rgba(224,230,237,0.7)' : '0 0 9px rgba(0,243,255,0.85)';
+                        const isW = isWhitePiece(piece);
+                        sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
+                        sq.style.textShadow = isW ? '0 0 5px rgba(224,230,237,0.6)' : '0 0 9px rgba(0,243,255,0.85)';
                     }
-                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+                        sq.classList.add('selected');
+                    }
+                    if (validMoves.some(m => m.r === r && m.c === c)) {
+                        sq.classList.add('valid-move');
+                    }
                     sq.onclick = () => handleSquareClick(r, c);
                     boardEl.appendChild(sq);
                 }
@@ -124,28 +228,51 @@
             document.getElementById('turn-indicator').textContent = 'Turno: ' + (currentTurn === 'white' ? 'Brancas' : 'Pretas');
         }
 
+        function updateCapturesUI() {
+            document.getElementById('caps-white').textContent = capturedWhite.join(' ') || '-';
+            document.getElementById('caps-black').textContent = capturedBlack.join(' ') || '-';
+        }
+
         function handleSquareClick(r, c) {
             const p = boardState[r][c];
-            const isWhitePiece = (piece) => "♙♖♘♗♕♔".includes(piece);
-            if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) { selectedSquare = null; renderBoard(); return; }
-            if (selectedSquare) {
-                const selPiece = boardState[selectedSquare.r][selectedSquare.c];
-                if (p && (isWhitePiece(p) === isWhitePiece(selPiece))) {
-                    selectedSquare = {r, c}; renderBoard(); return;
+            const myTurnIsWhite = currentTurn === 'white';
+
+            // Se já tem seleção e clicou em movimento válido (derrubada ou deslocamento)
+            if (selectedSquare && validMoves.some(m => m.r === r && m.c === c)) {
+                const targetPiece = boardState[r][c];
+                const movingPiece = boardState[selectedSquare.r][selectedSquare.c];
+
+                if (targetPiece) {
+                    if (isWhitePiece(targetPiece)) capturedWhite.push(targetPiece);
+                    else capturedBlack.push(targetPiece);
+                    updateCapturesUI();
+                    document.getElementById('match-status').textContent = `⚡ Derrubou ${targetPiece}!`;
+                } else {
+                    document.getElementById('match-status').textContent = `Movimento tático executado`;
                 }
-                boardState[r][c] = selPiece;
+
+                boardState[r][c] = movingPiece;
                 boardState[selectedSquare.r][selectedSquare.c] = "";
                 selectedSquare = null;
+                validMoves = [];
                 currentTurn = currentTurn === 'white' ? 'black' : 'white';
-                document.getElementById('match-status').textContent = 'Movimento realizado';
                 renderBoard();
                 return;
             }
-            if (p) { 
-                selectedSquare = {r, c}; 
-                document.getElementById('match-status').textContent = `Selecionado [${r+1},${c+1}]`;
-                renderBoard(); 
+
+            // Selecionar peça própria do turno atual
+            if (p && ((isWhitePiece(p) && myTurnIsWhite) || (isBlackPiece(p) && !myTurnIsWhite))) {
+                selectedSquare = {r, c};
+                validMoves = getValidMoves(r, c);
+                document.getElementById('match-status').textContent = `Unidade selecionada [${r+1},${c+1}] (${validMoves.length} alvos)`;
+                renderBoard();
+                return;
             }
+
+            // Clicou fora / vazio sem valid move
+            selectedSquare = null;
+            validMoves = [];
+            renderBoard();
         }
 
         function openSkinShop() { alert('Loja de Skins NFT em breve!'); }
