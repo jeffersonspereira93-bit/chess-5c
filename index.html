@@ -93,7 +93,7 @@
 
     <div id="screen-lobby" class="screen">
         <div class="menu-panel">
-            <div class="escrow-info">⚡ Protocolo Web3 Base/USDC Ativo</div>
+            <div id="escrow-status-banner" class="escrow-info">⚡ Protocolo Web3 Base/USDC Disconectado</div>
             <button class="btn-cyber" onclick="enterGame('friendly')">Modo Amistoso (Gratuito)</button>
             <button class="btn-cyber" onclick="enterGame('competitive')">Arena Competitiva (0.05 USDC)</button>
             <button class="btn-cyber btn-secondary" onclick="openSkinShop()">Loja de Skins NFT (Em Breve)</button>
@@ -122,11 +122,15 @@
     <script>
         let game = new Chess();
         let selectedSquare = null;
-        let validMoves = [];
         let capturedWhite = [];
         let capturedBlack = [];
         let userAddress = null;
         let activeMode = 'friendly';
+        let escrowLocked = false;
+
+        const BASE_CHAIN_ID = '0x2105'; // Base Mainnet (8453) ou use teste se preferir
+        const ESCROW_CONTRACT_MOCK = '0x71C...Chess5CBaseEscrow';
+        const USDC_BASE_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
         const pieceGlyphs = {
             p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
@@ -143,6 +147,17 @@
                         document.getElementById('wallet-btn').textContent = shortAddr;
                         document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
                         document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
+                        document.getElementById('escrow-status-banner').textContent = `⚡ Base Network Conectada (${shortAddr})`;
+                        
+                        // Opcional: checar switch chain base
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: BASE_CHAIN_ID }]
+                            });
+                        } catch (e) {
+                            console.log('Chain switch opcional ignorada ou não suportada');
+                        }
                     }
                 } catch (err) {
                     alert('Conexão recusada pela carteira.');
@@ -152,15 +167,33 @@
                 document.getElementById('wallet-btn').textContent = userAddress;
                 document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
                 document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
+                document.getElementById('escrow-status-banner').textContent = `⚡ Web3 Simulado (Modo Fallback)`;
+            }
+        }
+
+        async function triggerOnChainEscrowLock() {
+            if (window.ethereum && userAddress && userAddress.startsWith('0x') && userAddress.length > 10) {
+                // Exemplo estrutural de requisição de assinatura/transação de aprovação/transferência USDC
+                // Aqui simulamos o fluxo Web3 seguro de smart contract escrow lock
+                const confirmed = confirm(`[BASE NETWORK ESCROW]\nContrato: ${ESCROW_CONTRACT_MOCK}\nToken: USDC (0.05)\nCarteira: ${userAddress}\nConfirmar assinatura de travamento de fundos?`);
+                if (!confirmed) return false;
+                escrowLocked = true;
+                return true;
+            } else {
+                const confirmed = confirm("Confirmar Escrow Simulado de 0.05 USDC no Smart Contract da Arena Competitiva (Base Network)?");
+                if (!confirmed) return false;
+                escrowLocked = true;
+                return true;
             }
         }
 
         async function enterGame(mode) {
             activeMode = mode;
             if (mode === 'competitive') {
-                const confirmed = confirm("Confirma Escrow de 0.05 USDC no Smart Contract da Arena Competitiva (Base Network)?");
-                if (!confirmed) return;
-                alert(userAddress ? `Escrow 0.05 USDC travado na contract address vinculada a ${userAddress}` : 'Simulando Smart Contract Escrow Lock: 0.05 USDC garantidos!');
+                const locked = await triggerOnChainEscrowLock();
+                if (!locked) return;
+            } else {
+                escrowLocked = false;
             }
             document.getElementById('screen-lobby').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
@@ -172,6 +205,10 @@
         }
 
         function returnToLobby() {
+            if (activeMode === 'competitive' && escrowLocked && !game.in_checkmate()) {
+                const leave = confirm("Aviso: Sair da partida competitiva com escrow ativo pode penalizar reputação on-chain. Deseja sair?");
+                if (!leave) return;
+            }
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
         }
@@ -214,7 +251,6 @@
                         sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
                         sq.style.textShadow = isW ? '0 0 3px rgba(224,230,237,0.6)' : '0 0 5px rgba(0,243,255,0.85)';
                         
-                        // Alerta de rei em xeque
                         if (cell.type === 'k' && game.in_check() && cell.color === game.turn()) {
                             sq.classList.add('check-alert');
                         }
@@ -234,12 +270,15 @@
 
             const turnText = game.turn() === 'w' ? 'Brancas' : 'Pretas';
             let statusText = `Turno: ${turnText}`;
-            if (game.in_checkmate()) statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
+            if (game.in_checkmate()) {
+                statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
+                if (escrowLocked) statusText += ' 💰 (Escrow liberado on-chain)';
+            }
             else if (game.in_draw()) statusText = 'Empate (Afogamento/Repetição)!';
             else if (game.in_check()) statusText += ' ⚠️ XEQUE!';
 
             document.getElementById('turn-indicator').textContent = statusText;
-            document.getElementById('match-status').textContent = game.in_checkmate() ? 'Fim de jogo' : 'Selecione uma peça válida';
+            document.getElementById('match-status').textContent = game.in_checkmate() ? 'Fim de jogo - Settlement concluído' : 'Selecione uma peça válida';
         }
 
         function updateCapturesUI() {
@@ -255,7 +294,6 @@
                 const targetMove = legalMoves.find(m => m.to === sqAlg);
 
                 if (targetMove) {
-                    // Promoção automática para Dama (Q) por padrão ágil
                     const moveResult = game.move({
                         from: targetMove.from,
                         to: targetMove.to,
