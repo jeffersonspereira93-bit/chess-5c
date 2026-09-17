@@ -15,37 +15,48 @@
             --border-glow: 0 0 10px rgba(0, 243, 255, 0.35);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 8px; overflow-x: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 6px; overflow-x: hidden; }
         
-        header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
-        h1 { font-size: 1.15rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.2px; }
-        .wallet-badge { font-size: 0.72rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        header { width: 100%; max-width: 384px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 2px; }
+        h1 { font-size: 1.1rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.2px; }
+        .wallet-badge { font-size: 0.70rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .wallet-badge:hover { background: rgba(0,243,255,0.25); }
 
-        .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .screen { width: 100%; max-width: 384px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .hidden { display: none !important; }
 
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 18px; width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
-        .escrow-info { font-size: 0.75rem; color: #8a99ad; text-align: center; background: rgba(176,0,255,0.1); border: 1px solid rgba(176,0,255,0.3); padding: 6px; border-radius: 6px; }
-        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.90rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 16px; width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .escrow-info { font-size: 0.72rem; color: #8a99ad; text-align: center; background: rgba(176,0,255,0.1); border: 1px solid rgba(176,0,255,0.3); padding: 5px; border-radius: 6px; }
+        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
         .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
-        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; }
+        .game-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 5px 8px; border-radius: 8px; font-size: 0.78rem; }
         
-        .board-wrapper { width: min(94vw, 392px); aspect-ratio: 1 / 1; border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); border-radius: 8px; overflow: hidden; background: var(--panel-bg); margin: 4px auto; }
+        /* Travamento estrito de dimensão quadrada exata baseada em CSS clamp proporcional */
+        .board-wrapper { 
+            width: min(92vw, 384px); 
+            height: min(92vw, 384px); 
+            border: 2px solid var(--neon-purple); 
+            box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: var(--panel-bg); 
+            margin: 2px auto; 
+            flex-shrink: 0;
+        }
         #board-container { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); }
         
-        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.4rem, 5.5vw, 2.1rem); cursor: pointer; user-select: none; width: 100%; height: 100%; position: relative; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.2rem, 5vw, 1.9rem); cursor: pointer; user-select: none; width: 100%; height: 100%; position: relative; }
         .square.light { background-color: #24344d; }
         .square.dark { background-color: #111827; }
         .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 12px var(--neon-cyan); }
-        .square.valid-move::after { content: ''; width: 10px; height: 10px; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 8px var(--neon-green); opacity: 0.9; }
+        .square.valid-move::after { content: ''; width: 8px; height: 8px; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 6px var(--neon-green); opacity: 0.9; }
 
-        .hud-bottom { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: #8a99ad; }
-        .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 4px 8px; border-radius: 6px; min-height: 28px; align-items: center; }
-        #match-status { font-size: 0.8rem; color: var(--neon-cyan); text-align: center; }
-        footer { margin-top: 6px; font-size: 0.7rem; color: #64748b; text-align: center; }
+        .hud-bottom { width: 100%; max-width: 384px; display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #8a99ad; }
+        .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 4px 8px; border-radius: 6px; min-height: 26px; align-items: center; }
+        #match-status { font-size: 0.78rem; color: var(--neon-cyan); text-align: center; }
+        footer { margin-top: 4px; font-size: 0.68rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
@@ -67,7 +78,7 @@
     <div id="screen-game" class="screen hidden">
         <div class="game-hud">
             <span id="turn-indicator">Turno: Brancas</span>
-            <button class="btn-cyber" style="padding: 4px 10px; font-size: 0.7rem;" onclick="returnToLobby()">Lobby</button>
+            <button class="btn-cyber" style="padding: 3px 8px; font-size: 0.68rem;" onclick="returnToLobby()">Lobby</button>
         </div>
         <div class="board-wrapper">
             <div id="board-container"></div>
@@ -108,7 +119,6 @@
                     alert('Conexão recusada pela carteira.');
                 }
             } else {
-                // Simulação mobile injetada se Web3 provider nativo ausente
                 userAddress = '0x5C...9A41';
                 document.getElementById('wallet-btn').textContent = userAddress;
                 document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
