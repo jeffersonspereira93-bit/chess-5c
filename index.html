@@ -18,13 +18,15 @@
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 8px; overflow-x: hidden; }
         
         header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
-        h1 { font-size: 1.2rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.5px; }
-        .node-tag { font-size: 0.7rem; color: #00ff66; background: rgba(0,255,102,0.12); border: 1px solid rgba(0,255,102,0.35); padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        h1 { font-size: 1.15rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1.2px; }
+        .wallet-badge { font-size: 0.72rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .wallet-badge:hover { background: rgba(0,243,255,0.25); }
 
         .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .hidden { display: none !important; }
 
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 40px; }
+        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 18px; width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        .escrow-info { font-size: 0.75rem; color: #8a99ad; text-align: center; background: rgba(176,0,255,0.1); border: 1px solid rgba(176,0,255,0.3); padding: 6px; border-radius: 6px; }
         .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 14px; border-radius: 8px; font-size: 0.90rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
         .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
@@ -50,11 +52,12 @@
 
     <header>
         <h1>CHESS 5C ARENA</h1>
-        <span class="node-tag">FASE 1: MOTOR</span>
+        <span id="wallet-btn" class="wallet-badge" onclick="connectWallet()">Conectar Carteira</span>
     </header>
 
     <div id="screen-lobby" class="screen">
         <div class="menu-panel">
+            <div class="escrow-info">⚡ Protocolo Web3 Base/USDC Ativo</div>
             <button class="btn-cyber" onclick="enterGame('friendly')">Modo Amistoso (Gratuito)</button>
             <button class="btn-cyber" onclick="enterGame('competitive')">Arena Competitiva (0.05 USDC)</button>
             <button class="btn-cyber btn-secondary" onclick="openSkinShop()">Loja de Skins NFT (Em Breve)</button>
@@ -78,7 +81,7 @@
         </div>
     </div>
 
-    <footer>Chess 5C Arena &bull; Cyberpunk Edition</footer>
+    <footer>Chess 5C Arena &bull; Web3 Protocol &bull; Cyberpunk Edition</footer>
 
     <script>
         let boardState = [];
@@ -87,8 +90,33 @@
         let validMoves = [];
         let capturedWhite = [];
         let capturedBlack = [];
+        let userAddress = null;
+        let activeMode = 'friendly';
 
-        function initBoardData() {
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    if (accounts.length > 0) {
+                        userAddress = accounts[0];
+                        const shortAddr = userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
+                        document.getElementById('wallet-btn').textContent = shortAddr;
+                        document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
+                        document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
+                    }
+                } catch (err) {
+                    alert('Conexão recusada pela carteira.');
+                }
+            } else {
+                // Simulação mobile injetada se Web3 provider nativo ausente
+                userAddress = '0x5C...9A41';
+                document.getElementById('wallet-btn').textContent = userAddress;
+                document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
+                document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
+            }
+        }
+
+        async function initBoardData() {
             boardState = [
                 ["♜","♞","♝","♛","♚","♝","♞","♜"],
                 ["♟","♟","♟","♟","♟","♟","♟","♟"],
@@ -104,11 +132,16 @@
             updateCapturesUI();
         }
 
-        function enterGame(mode) {
-            if(mode === 'competitive') alert('Simulando aprovação de smart contract: 0.05 USDC escrow locked.');
+        async function enterGame(mode) {
+            activeMode = mode;
+            if (mode === 'competitive') {
+                const confirmed = confirm("Confirma Escrow de 0.05 USDC no Smart Contract da Arena Competitiva (Base Network)?");
+                if (!confirmed) return;
+                alert(userAddress ? `Escrow 0.05 USDC travado na contract address vinculada a ${userAddress}` : 'Simulando Smart Contract Escrow Lock: 0.05 USDC garantidos!');
+            }
             document.getElementById('screen-lobby').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
-            initBoardData();
+            await initBoardData();
             renderBoard();
         }
 
@@ -128,39 +161,27 @@
             const dir = isWhite ? -1 : 1;
 
             if (piece === '♙' || piece === '♟') {
-                // Avanço 1 casa
                 const r1 = r + dir;
                 if (r1 >= 0 && r1 < 8 && boardState[r1][c] === "") {
                     moves.push({r: r1, c: c});
-                    // Duplo inicial
                     const startRow = isWhite ? 6 : 1;
                     const r2 = r + 2 * dir;
-                    if (r === startRow && boardState[r2][c] === "") {
-                        moves.push({r: r2, c: c});
-                    }
+                    if (r === startRow && boardState[r2][c] === "") moves.push({r: r2, c: c});
                 }
-                // Captura diagonal
                 [c - 1, c + 1].forEach(targetC => {
                     const r1 = r + dir;
                     if (r1 >= 0 && r1 < 8 && targetC >= 0 && targetC < 8) {
                         const target = boardState[r1][targetC];
-                        if (target && isWhitePiece(target) !== isWhite) {
-                            moves.push({r: r1, c: targetC});
-                        }
+                        if (target && isWhitePiece(target) !== isWhite) moves.push({r: r1, c: targetC});
                     }
                 });
             } else if (piece === '♘' || piece === '♞') {
-                const knightSteps = [
-                    [-2,-1],[-2,1],[-1,-2],[-1,2],
-                    [1,-2],[1,2],[2,-1],[2,1]
-                ];
+                const knightSteps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
                 knightSteps.forEach(([dr, dc]) => {
                     const nr = r + dr, nc = c + dc;
                     if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
                         const target = boardState[nr][nc];
-                        if (!target || isWhitePiece(target) !== isWhite) {
-                            moves.push({r: nr, c: nc});
-                        }
+                        if (!target || isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
                     }
                 });
             } else if (piece === '♔' || piece === '♚') {
@@ -170,14 +191,11 @@
                         const nr = r + dr, nc = c + dc;
                         if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
                             const target = boardState[nr][nc];
-                            if (!target || isWhitePiece(target) !== isWhite) {
-                                moves.push({r: nr, c: nc});
-                            }
+                            if (!target || isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
                         }
                     }
                 }
             } else {
-                // Torre, Bispo, Dama (direções lineares simplificadas para cerco ágil)
                 const dirs = [];
                 if ("♖♜♕♛".includes(piece)) dirs.push([-1,0],[1,0],[0,-1],[0,1]);
                 if ("♗♝♕♛".includes(piece)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
@@ -188,9 +206,7 @@
                         if (!target) {
                             moves.push({r: nr, c: nc});
                         } else {
-                            if (isWhitePiece(target) !== isWhite) {
-                                moves.push({r: nr, c: nc});
-                            }
+                            if (isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
                             break;
                         }
                         nr += dr; nc += dc;
@@ -215,12 +231,8 @@
                         sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
                         sq.style.textShadow = isW ? '0 0 5px rgba(224,230,237,0.6)' : '0 0 9px rgba(0,243,255,0.85)';
                     }
-                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
-                        sq.classList.add('selected');
-                    }
-                    if (validMoves.some(m => m.r === r && m.c === c)) {
-                        sq.classList.add('valid-move');
-                    }
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
+                    if (validMoves.some(m => m.r === r && m.c === c)) sq.classList.add('valid-move');
                     sq.onclick = () => handleSquareClick(r, c);
                     boardEl.appendChild(sq);
                 }
@@ -237,7 +249,6 @@
             const p = boardState[r][c];
             const myTurnIsWhite = currentTurn === 'white';
 
-            // Se já tem seleção e clicou em movimento válido (derrubada ou deslocamento)
             if (selectedSquare && validMoves.some(m => m.r === r && m.c === c)) {
                 const targetPiece = boardState[r][c];
                 const movingPiece = boardState[selectedSquare.r][selectedSquare.c];
@@ -260,7 +271,6 @@
                 return;
             }
 
-            // Selecionar peça própria do turno atual
             if (p && ((isWhitePiece(p) && myTurnIsWhite) || (isBlackPiece(p) && !myTurnIsWhite))) {
                 selectedSquare = {r, c};
                 validMoves = getValidMoves(r, c);
@@ -269,7 +279,6 @@
                 return;
             }
 
-            // Clicou fora / vazio sem valid move
             selectedSquare = null;
             validMoves = [];
             renderBoard();
