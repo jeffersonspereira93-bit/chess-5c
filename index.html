@@ -34,7 +34,8 @@
         .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
-        .game-hud { width: 100%; max-width: 336px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; flex-shrink: 0; }
+        .game-hud { width: 100%; max-width: 336px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 6px; font-size: 0.72rem; flex-shrink: 0; }
+        .timer-badge { color: var(--neon-cyan); font-family: monospace; font-weight: bold; }
         
         .board-wrapper { 
             width: 100%; 
@@ -80,7 +81,7 @@
 
         .hud-bottom { width: 100%; max-width: 336px; display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #8a99ad; flex-shrink: 0; }
         .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 5px 8px; border-radius: 6px; min-height: 26px; align-items: center; }
-        #match-status { font-size: 0.75rem; color: var(--neon-cyan); text-align: center; }
+        #match-status { font-size: 0.72rem; color: var(--neon-cyan); text-align: center; }
         footer { margin-top: 4px; font-size: 0.65rem; color: #64748b; text-align: center; }
     </style>
 </head>
@@ -102,7 +103,9 @@
 
     <div id="screen-game" class="screen hidden">
         <div class="game-hud">
-            <span id="turn-indicator">Turno: Brancas</span>
+            <div>
+                <span id="turn-indicator">Brancas</span> | <span class="timer-badge" id="timer-display">05:00</span>
+            </div>
             <button class="btn-cyber" style="padding: 2px 8px; font-size: 0.65rem;" onclick="returnToLobby()">Lobby</button>
         </div>
         <div class="board-wrapper">
@@ -111,8 +114,8 @@
         <div class="hud-bottom">
             <div id="match-status">Selecione uma peça válida</div>
             <div class="captures-row">
-                <span>Derrubadas (Brancas): <strong id="caps-white" style="color:var(--neon-cyan)">-</strong></span>
-                <span>Derrubadas (Pretas): <strong id="caps-black" style="color:#fff">-</strong></span>
+                <span>Derrubadas (W): <strong id="caps-white" style="color:var(--neon-cyan)">-</strong></span>
+                <span>Derrubadas (B): <strong id="caps-black" style="color:#fff">-</strong></span>
             </div>
         </div>
     </div>
@@ -128,6 +131,9 @@
         let activeMode = 'friendly';
         let escrowLocked = false;
         let audioCtx = null;
+        let timerInterval = null;
+        let whiteTime = 300;
+        let blackTime = 300;
 
         const BASE_CHAIN_ID = '0x2105';
         const ESCROW_CONTRACT_MOCK = '0x71C...Chess5CBaseEscrow';
@@ -200,6 +206,35 @@
             }
         }
 
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function startClock() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (game.game_over()) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                if (game.turn() === 'w') {
+                    if (whiteTime > 0) whiteTime--;
+                } else {
+                    if (blackTime > 0) blackTime--;
+                }
+                const activeSec = game.turn() === 'w' ? whiteTime : blackTime;
+                document.getElementById('timer-display').textContent = formatTime(activeSec);
+                if (whiteTime === 0 || blackTime === 0) {
+                    clearInterval(timerInterval);
+                    const winner = whiteTime === 0 ? 'Pretas' : 'Brancas';
+                    document.getElementById('match-status').textContent = `Tempo esgotado! ${winner} vencem!`;
+                    playSFX('escrow');
+                }
+            }, 1000);
+        }
+
         async function connectWallet() {
             initAudio();
             if (window.ethereum) {
@@ -211,7 +246,7 @@
                         document.getElementById('wallet-btn').textContent = shortAddr;
                         document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
                         document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
-                        document.getElementById('escrow-status-banner').textContent = `⚡ Base Network Conectada (${shortAddr})`;
+                        document.getElementById('escrow-status-banner').textContent = `⚡ Base Conectada (${shortAddr})`;
                         playSFX('select');
                         try {
                             await window.ethereum.request({
@@ -254,14 +289,18 @@
             document.getElementById('screen-lobby').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
             game.reset();
+            whiteTime = 300;
+            blackTime = 300;
             capturedWhite = [];
             capturedBlack = [];
             updateCapturesUI();
             renderBoard();
+            startClock();
         }
 
         function returnToLobby() {
             initAudio();
+            clearInterval(timerInterval);
             if (activeMode === 'competitive' && escrowLocked && !game.in_checkmate()) {
                 const leave = confirm("Aviso: Sair da partida competitiva com escrow ativo pode penalizar reputação on-chain. Deseja sair?");
                 if (!leave) return;
@@ -273,7 +312,7 @@
 
         function algebraicToIndex(sq) {
             const file = sq.charCodeAt(0) - 'a'.charCodeAt(0);
-            const rank = 8 - parseInt(sq, 10);
+            const rank = 8 - parseInt(sq[1], 10);
             return { r: rank, c: file };
         }
 
@@ -330,17 +369,22 @@
             let statusText = `Turno: ${turnText}`;
             if (game.in_checkmate()) {
                 statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
-                if (escrowLocked) statusText += ' 💰 (Escrow liberado on-chain)';
+                if (escrowLocked) statusText += ' 💰 (Escrow liberado)';
                 playSFX('escrow');
+                clearInterval(timerInterval);
             }
-            else if (game.in_draw()) statusText = 'Empate (Afogamento/Repetição)!';
+            else if (game.in_draw()) {
+                statusText = 'Empate técnico!';
+                clearInterval(timerInterval);
+            }
             else if (game.in_check()) {
                 statusText += ' ⚠️ XEQUE!';
                 playSFX('check');
             }
 
-            document.getElementById('turn-indicator').textContent = statusText;
-            document.getElementById('match-status').textContent = game.in_checkmate() ? 'Fim de jogo - Settlement concluído' : 'Selecione uma peça válida';
+            document.getElementById('turn-indicator').textContent = turnText;
+            document.getElementById('timer-display').textContent = formatTime(game.turn() === 'w' ? whiteTime : blackTime);
+            document.getElementById('match-status').textContent = game.game_over() ? 'Fim de jogo - Settlement concluído' : 'Selecione uma peça válida';
         }
 
         function updateCapturesUI() {
@@ -350,6 +394,7 @@
 
         function handleSquareClick(r, c) {
             initAudio();
+            if (game.game_over()) return;
             const sqAlg = indexToAlgebraic(r, c);
 
             if (selectedSquare) {
