@@ -17,12 +17,12 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 4px; overflow-x: hidden; }
         
-        header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 0 2px; }
-        h1 { font-size: 1rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1px; }
-        .wallet-badge { font-size: 0.68rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        header { width: 100%; max-width: 320px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 0 2px; }
+        h1 { font-size: 0.95rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1px; }
+        .wallet-badge { font-size: 0.65rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .wallet-badge:hover { background: rgba(0,243,255,0.25); }
 
-        .screen { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .screen { width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .hidden { display: none !important; }
 
         .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 16px; width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
@@ -31,12 +31,13 @@
         .btn-cyber:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
 
-        .game-hud { width: 100%; max-width: 336px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; flex-shrink: 0; }
+        .game-hud { width: 100%; max-width: 320px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; flex-shrink: 0; }
         
-        /* Travamento milimétrico por proporção fixa e sem colapso de linha interna */
+        /* Travamento geométrico perfeito 1:1 sem distorção de linhas */
         .board-wrapper { 
-            width: 336px; 
-            height: 336px; 
+            width: 100%; 
+            max-width: 320px; 
+            aspect-ratio: 1 / 1; 
             border: 2px solid var(--neon-purple); 
             box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); 
             border-radius: 6px; 
@@ -47,24 +48,38 @@
             display: flex;
         }
         #board-container { 
-            width: 332px; 
-            height: 332px; 
+            width: 100%; 
+            height: 100%; 
             display: grid; 
-            grid-template-columns: repeat(8, 41.5px); 
-            grid-template-rows: repeat(8, 41.5px); 
+            grid-template-columns: repeat(8, minmax(0, 1fr)); 
+            grid-template-rows: repeat(8, minmax(0, 1fr)); 
         }
         
-        /* Peças redimensionadas e centralizadas rigorosamente */
-        .square { display: flex; align-items: center; justify-content: center; font-size: 1.25rem; line-height: 1; cursor: pointer; user-select: none; width: 41.5px; height: 41.5px; position: relative; overflow: hidden; }
+        /* Peças compactas (0.95rem) e células rígidas que impedem esmagamento */
+        .square { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.95rem; 
+            line-height: 1; 
+            cursor: pointer; 
+            user-select: none; 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            overflow: hidden; 
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
         .square.light { background-color: #24344d; }
         .square.dark { background-color: #111827; }
-        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 10px var(--neon-cyan); }
-        .square.valid-move::after { content: ''; width: 6px; height: 6px; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 5px var(--neon-green); opacity: 0.9; }
+        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 8px var(--neon-cyan); }
+        .square.valid-move::after { content: ''; width: 5px; height: 5px; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 4px var(--neon-green); opacity: 0.9; }
 
-        .hud-bottom { width: 100%; max-width: 336px; display: flex; flex-direction: column; gap: 3px; font-size: 0.7rem; color: #8a99ad; flex-shrink: 0; }
+        .hud-bottom { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 3px; font-size: 0.68rem; color: #8a99ad; flex-shrink: 0; }
         .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 4px 8px; border-radius: 6px; min-height: 24px; align-items: center; }
-        #match-status { font-size: 0.75rem; color: var(--neon-cyan); text-align: center; }
-        footer { margin-top: 2px; font-size: 0.65rem; color: #64748b; text-align: center; }
+        #match-status { font-size: 0.72rem; color: var(--neon-cyan); text-align: center; }
+        footer { margin-top: 2px; font-size: 0.62rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
@@ -86,7 +101,7 @@
     <div id="screen-game" class="screen hidden">
         <div class="game-hud">
             <span id="turn-indicator">Turno: Brancas</span>
-            <button class="btn-cyber" style="padding: 2px 6px; font-size: 0.65rem;" onclick="returnToLobby()">Lobby</button>
+            <button class="btn-cyber" style="padding: 2px 6px; font-size: 0.62rem;" onclick="returnToLobby()">Lobby</button>
         </div>
         <div class="board-wrapper">
             <div id="board-container"></div>
@@ -194,7 +209,7 @@
                     }
                 });
             } else if (piece === '♘' || piece === '♞') {
-                const knightSteps = [[-2,-1],,[-1,-2],,,,,];
+                const knightSteps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
                 knightSteps.forEach(([dr, dc]) => {
                     const nr = r + dr, nc = c + dc;
                     if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
@@ -215,8 +230,8 @@
                 }
             } else {
                 const dirs = [];
-                if ("♖♜♕♛".includes(piece)) dirs.push([-1,0],,[0,-1],);
-                if ("♗♝♕♛".includes(piece)) dirs.push([-1,-1],,,);
+                if ("♖♜♕♛".includes(piece)) dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+                if ("♗♝♕♛".includes(piece)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
                 dirs.forEach(([dr, dc]) => {
                     let nr = r + dr, nc = c + dc;
                     while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
@@ -247,7 +262,7 @@
                         sq.textContent = piece;
                         const isW = isWhitePiece(piece);
                         sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
-                        sq.style.textShadow = isW ? '0 0 4px rgba(224,230,237,0.6)' : '0 0 7px rgba(0,243,255,0.85)';
+                        sq.style.textShadow = isW ? '0 0 3px rgba(224,230,237,0.6)' : '0 0 5px rgba(0,243,255,0.85)';
                     }
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
                     if (validMoves.some(m => m.r === r && m.c === c)) sq.classList.add('valid-move');
