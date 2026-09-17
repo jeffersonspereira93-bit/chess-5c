@@ -1,0 +1,18 @@
+{
+  "name": "zion_workspace",
+  "version": "1.0.0",
+  "description": "Chess 5C Arena Web3",
+  "main": "index.html",
+  "scripts": {
+    "test": "node sim-runner.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeffersonpereira93-bit/chess-5c.git"
+  },
+  "author": "Jefferson",
+  "license": "ISC",
+  "dependencies": {
+    "chess.js": "^1.0.0"
+  }
+}

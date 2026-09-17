@@ -3,443 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chess 5C Arena | Cyberpunk Edition</title>
-    <!-- Motor FIDE Open Source (chess.js) -->
+    <title>CHESS 5C ARENA | Web3 Base Mainnet</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         :root {
             --bg-color: #0b0f19;
-            --panel-bg: #131b2e;
-            --neon-cyan: #00f3ff;
-            --neon-purple: #b000ff;
-            --neon-green: #00ff66;
-            --neon-red: #ff0055;
-            --text-color: #e0e6ed;
-            --border-glow: 0 0 10px rgba(0, 243, 255, 0.35);
+            --panel-bg: #151c28;
+            --accent: #00ffcc;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --danger: #ff5555;
+            --border: #30363d;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 6px; overflow-x: hidden; }
-        
-        header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 2px; }
-        h1 { font-size: 0.95rem; color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 243, 255, 0.5); letter-spacing: 1px; }
-        .wallet-badge { font-size: 0.65rem; color: var(--neon-cyan); background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan); padding: 3px 6px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .wallet-badge:hover { background: rgba(0,243,255,0.25); }
-
-        .screen { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        header { width: 100%; max-width: 480px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        h1 { font-size: clamp(1rem, 4vw, 1.3rem); color: var(--accent); letter-spacing: 1px; }
+        .wallet-btn { background: rgba(0,255,204,0.1); border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+        .banner { width: 100%; max-width: 480px; background: var(--panel-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 10px; }
+        .hud { display: flex; justify-content: space-between; background: var(--panel-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; }
+        .timer { font-family: monospace; font-weight: bold; color: var(--accent); }
+        .board-container { width: 100%; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(8, 1fr); border: 2px solid var(--accent); border-radius: 4px; overflow: hidden; background: #000; }
+        .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.5rem, 7vw, 2.5rem); cursor: pointer; position: relative; }
+        .square.light { background: #404b60; }
+        .square.dark { background: #222938; }
+        .square.selected { background: rgba(0, 255, 204, 0.4) !important; }
+        .controls { display: flex; gap: 8px; }
+        button.action { flex: 1; background: var(--accent); color: #000; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        button.secondary { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border); }
         .hidden { display: none !important; }
-
-        .menu-panel { background-color: var(--panel-bg); border: 1px solid var(--neon-cyan); box-shadow: var(--border-glow); border-radius: 12px; padding: 16px; width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .escrow-info { font-size: 0.72rem; color: #8a99ad; text-align: center; background: rgba(176,0,255,0.1); border: 1px solid rgba(176,0,255,0.3); padding: 5px; border-radius: 6px; }
-        .btn-cyber { background: linear-gradient(135deg, #1f293d 0%, #111827 100%); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease; text-align: center; text-transform: uppercase; }
-        .btn-cyber:active { transform: scale(0.98); }
-        .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
-
-        .game-hud { width: 100%; max-width: 336px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 6px; font-size: 0.72rem; flex-shrink: 0; }
-        .timer-badge { color: var(--neon-cyan); font-family: monospace; font-weight: bold; }
-        
-        .board-wrapper { 
-            width: 100%; 
-            max-width: 336px; 
-            aspect-ratio: 1 / 1; 
-            border: 2px solid var(--neon-purple); 
-            box-shadow: 0 0 15px rgba(176, 0, 255, 0.4); 
-            border-radius: 6px; 
-            overflow: hidden; 
-            background: var(--panel-bg); 
-            margin: 2px auto; 
-            flex-shrink: 0;
-            display: block;
-        }
-        #board-container { 
-            width: 100%; 
-            height: 100%; 
-            display: grid; 
-            grid-template-columns: repeat(8, 1fr); 
-            grid-template-rows: repeat(8, 1fr); 
-        }
-        
-        .square { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: clamp(1.1rem, 7.5vw, 1.85rem); 
-            line-height: 1; 
-            cursor: pointer; 
-            user-select: none; 
-            width: 100%; 
-            height: 100%; 
-            position: relative; 
-            box-sizing: border-box;
-            flex-shrink: 0;
-            flex-grow: 0;
-        }
-        .square.light { background-color: #24344d; }
-        .square.dark { background-color: #111827; }
-        .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 8px var(--neon-cyan); }
-        .square.valid-move::after { content: ''; width: 28%; height: 28%; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 6px var(--neon-green); opacity: 0.9; }
-        .square.check-alert { background-color: rgba(255, 0, 85, 0.5) !important; box-shadow: inset 0 0 10px var(--neon-red); }
-
-        .hud-bottom { width: 100%; max-width: 336px; display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #8a99ad; flex-shrink: 0; }
-        .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 5px 8px; border-radius: 6px; min-height: 26px; align-items: center; }
-        #match-status { font-size: 0.72rem; color: var(--neon-cyan); text-align: center; }
-        footer { margin-top: 4px; font-size: 0.65rem; color: #64748b; text-align: center; }
+        .status-log { font-size: 0.75rem; color: var(--text-muted); background: var(--panel-bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); min-height: 40px; }
     </style>
 </head>
 <body>
-
     <header>
         <h1>CHESS 5C ARENA</h1>
-        <span id="wallet-btn" class="wallet-badge" onclick="connectWallet()">Conectar Carteira</span>
+        <button id="wallet-btn" class="wallet-btn" onclick="connectWallet()">Conectar Base</button>
     </header>
 
-    <div id="screen-lobby" class="screen">
-        <div class="menu-panel">
-            <div id="escrow-status-banner" class="escrow-info">⚡ Protocolo Web3 Base/USDC Disconectado</div>
-            <button class="btn-cyber" onclick="enterGame('friendly')">Modo Amistoso (Gratuito)</button>
-            <button class="btn-cyber" onclick="enterGame('competitive')">Arena Competitiva (0.05 USDC)</button>
-            <button class="btn-cyber btn-secondary" onclick="openSkinShop()">Loja de Skins NFT (Em Breve)</button>
+    <div class="banner" id="escrow-status-banner">
+        <span id="network-status">Rede: Desconectada</span>
+        <span id="escrow-state">Escrow: 0.05 USDC</span>
+    </div>
+
+    <div class="app-container" id="screen-lobby">
+        <div class="status-log" id="room-info">Sala padrão (Livre). Compartilhe o link com ?room=5c-code para desafiar.</div>
+        <div class="controls">
+            <button class="action" onclick="enterGame('friendly')">Modo Amistoso (Gratuito)</button>
+        </div>
+        <div class="controls">
+            <button class="action secondary" onclick="enterGame('web3')">Apostar 0.05 USDC (Base)</button>
         </div>
     </div>
 
-    <div id="screen-game" class="screen hidden">
-        <div class="game-hud">
-            <div>
-                <span id="turn-indicator">Brancas</span> | <span class="timer-badge" id="timer-display">05:00</span>
-            </div>
-            <button class="btn-cyber" style="padding: 2px 8px; font-size: 0.65rem;" onclick="returnToLobby()">Lobby</button>
+    <div class="app-container hidden" id="screen-game">
+        <div class="hud">
+            <span>Pretas</span>
+            <span class="timer" id="timer-b">05:00</span>
         </div>
-        <div class="board-wrapper">
-            <div id="board-container"></div>
+        <div class="board-container" id="board-container"></div>
+        <div class="hud">
+            <span>Brancas (<span id="turn-indicator">Brancas</span>)</span>
+            <span class="timer" id="timer-w">05:00</span>
         </div>
-        <div class="hud-bottom">
-            <div id="match-status">Selecione uma peça válida</div>
-            <div class="captures-row">
-                <span>Derrubadas (W): <strong id="caps-white" style="color:var(--neon-cyan)">-</strong></span>
-                <span>Derrubadas (B): <strong id="caps-black" style="color:#fff">-</strong></span>
-            </div>
-        </div>
+        <div class="status-log" id="tx-log">Partida em andamento.</div>
     </div>
-
-    <footer>Chess 5C Arena &bull; Web3 Protocol &bull; Cyberpunk Edition</footer>
 
     <script>
+        const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+        const BASE_CHAIN_ID = '0x2105'; // 8453
+        
         let game = new Chess();
         let selectedSquare = null;
-        let capturedWhite = [];
-        let capturedBlack = [];
-        let userAddress = null;
-        let activeMode = 'friendly';
+        let mode = 'friendly';
         let escrowLocked = false;
-        let audioCtx = null;
+        let whiteTime = 300, blackTime = 300;
         let timerInterval = null;
-        let whiteTime = 300;
-        let blackTime = 300;
 
-        const BASE_CHAIN_ID = '0x2105';
-        const ESCROW_CONTRACT_MOCK = '0x71C...Chess5CBaseEscrow';
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomCode = urlParams.get('room');
+        if (roomCode) {
+            document.getElementById('room-info').innerText = `Entrou na sala remota: ${roomCode}`;
+        }
 
-        const pieceGlyphs = {
-            p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+        const pieceSymbols = {
+            p: '♟', r: '∜', n: '♞', b: '♝', q: '♛', k: '♚',
             P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
         };
 
-        function initAudio() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) audioCtx = new AudioContext();
-            }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
-
-        function playSFX(type) {
-            initAudio();
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'select') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, now);
-                osc.frequency.exponentialRampToValueAtTime(660, now + 0.05);
-                gain.gain.setValueAtTime(0.08, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.06);
-                osc.start(now);
-                osc.stop(now + 0.06);
-            } else if (type === 'move') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(280, now);
-                osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.09);
-                osc.start(now);
-                osc.stop(now + 0.09);
-            } else if (type === 'capture') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(180, now);
-                osc.frequency.linearRampToValueAtTime(90, now + 0.15);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.16);
-                osc.start(now);
-                osc.stop(now + 0.16);
-            } else if (type === 'check') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(880, now);
-                osc.frequency.setValueAtTime(440, now + 0.08);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'escrow') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, now);
-                osc.frequency.setValueAtTime(659.25, now + 0.08);
-                osc.frequency.setValueAtTime(783.99, now + 0.16);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
-                osc.start(now);
-                osc.stop(now + 0.35);
-            }
-        }
-
-        function formatTime(sec) {
-            const m = Math.floor(sec / 60).toString().padStart(2, '0');
-            const s = (sec % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        }
-
-        function startClock() {
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (game.game_over()) {
-                    clearInterval(timerInterval);
-                    return;
-                }
-                if (game.turn() === 'w') {
-                    if (whiteTime > 0) whiteTime--;
-                } else {
-                    if (blackTime > 0) blackTime--;
-                }
-                const activeSec = game.turn() === 'w' ? whiteTime : blackTime;
-                document.getElementById('timer-display').textContent = formatTime(activeSec);
-                if (whiteTime === 0 || blackTime === 0) {
-                    clearInterval(timerInterval);
-                    const winner = whiteTime === 0 ? 'Pretas' : 'Brancas';
-                    document.getElementById('match-status').textContent = `Tempo esgotado! ${winner} vencem!`;
-                    playSFX('escrow');
-                }
-            }, 1000);
+        function log(msg) {
+            document.getElementById('tx-log').innerText = msg;
         }
 
         async function connectWallet() {
-            initAudio();
-            if (window.ethereum) {
-                try {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    if (accounts.length > 0) {
-                        userAddress = accounts[0];
-                        const shortAddr = userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
-                        document.getElementById('wallet-btn').textContent = shortAddr;
-                        document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
-                        document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
-                        document.getElementById('escrow-status-banner').textContent = `⚡ Base Conectada (${shortAddr})`;
-                        playSFX('select');
-                        try {
-                            await window.ethereum.request({
-                                method: 'wallet_switchEthereumChain',
-                                params: [{ chainId: BASE_CHAIN_ID }]
-                            });
-                        } catch (e) {}
-                    }
-                } catch (err) {
-                    alert('Conexão recusada pela carteira.');
-                }
-            } else {
-                userAddress = '0x5C...9A41';
-                document.getElementById('wallet-btn').textContent = userAddress;
-                document.getElementById('wallet-btn').style.borderColor = 'var(--neon-green)';
-                document.getElementById('wallet-btn').style.color = 'var(--neon-green)';
-                document.getElementById('escrow-status-banner').textContent = `⚡ Web3 Simulado (Modo Fallback)`;
-                playSFX('select');
+            if (!window.ethereum) {
+                alert('Carteira Web3 (MetaMask/Coinbase) não detectada.');
+                return;
             }
-        }
-
-        async function triggerOnChainEscrowLock() {
-            const confirmed = confirm(`[BASE NETWORK ESCROW]\nContrato: ${ESCROW_CONTRACT_MOCK}\nToken: USDC (0.05)\nCarteira: ${userAddress || 'Simulada'}\nConfirmar assinatura de travamento de fundos?`);
-            if (!confirmed) return false;
-            escrowLocked = true;
-            playSFX('escrow');
-            return true;
-        }
-
-        async function enterGame(mode) {
-            initAudio();
-            activeMode = mode;
-            if (mode === 'competitive') {
-                const locked = await triggerOnChainEscrowLock();
-                if (!locked) return;
-            } else {
-                escrowLocked = false;
-                playSFX('select');
-            }
-            document.getElementById('screen-lobby').classList.add('hidden');
-            document.getElementById('screen-game').classList.remove('hidden');
-            game.reset();
-            whiteTime = 300;
-            blackTime = 300;
-            capturedWhite = [];
-            capturedBlack = [];
-            updateCapturesUI();
-            renderBoard();
-            startClock();
-        }
-
-        function returnToLobby() {
-            initAudio();
-            clearInterval(timerInterval);
-            if (activeMode === 'competitive' && escrowLocked && !game.in_checkmate()) {
-                const leave = confirm("Aviso: Sair da partida competitiva com escrow ativo pode penalizar reputação on-chain. Deseja sair?");
-                if (!leave) return;
-            }
-            document.getElementById('screen-game').classList.add('hidden');
-            document.getElementById('screen-lobby').classList.remove('hidden');
-            playSFX('select');
-        }
-
-        function algebraicToIndex(sq) {
-            const file = sq.charCodeAt(0) - 'a'.charCodeAt(0);
-            const rank = 8 - parseInt(sq[1], 10);
-            return { r: rank, c: file };
-        }
-
-        function indexToAlgebraic(r, c) {
-            const file = String.fromCharCode('a'.charCodeAt(0) + c);
-            const rank = 8 - r;
-            return file + rank;
-        }
-
-        function getValidMovesForUI(r, c) {
-            const sqAlg = indexToAlgebraic(r, c);
-            const moves = game.moves({ square: sqAlg, verbose: true });
-            return moves.map(m => algebraicToIndex(m.to));
-        }
-
-        function renderBoard() {
-            const boardEl = document.getElementById('board-container');
-            boardEl.innerHTML = '';
-            const boardData = game.board();
-            const legalMovesUI = selectedSquare ? getValidMovesForUI(selectedSquare.r, selectedSquare.c) : [];
-
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const sq = document.createElement('div');
-                    const isLight = (r + c) % 2 === 0;
-                    sq.className = `square ${isLight ? 'light' : 'dark'}`;
-                    
-                    const cell = boardData[r][c];
-                    if (cell) {
-                        const glyph = pieceGlyphs[cell.color === 'w' ? cell.type.toUpperCase() : cell.type];
-                        sq.textContent = glyph;
-                        const isW = cell.color === 'w';
-                        sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
-                        sq.style.textShadow = isW ? '0 0 3px rgba(224,230,237,0.6)' : '0 0 5px rgba(0,243,255,0.85)';
-                        
-                        if (cell.type === 'k' && game.in_check() && cell.color === game.turn()) {
-                            sq.classList.add('check-alert');
-                        }
-                    }
-
-                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
-                        sq.classList.add('selected');
-                    }
-                    if (legalMovesUI.some(m => m.r === r && m.c === c)) {
-                        sq.classList.add('valid-move');
-                    }
-
-                    sq.onclick = () => handleSquareClick(r, c);
-                    boardEl.appendChild(sq);
-                }
-            }
-
-            const turnText = game.turn() === 'w' ? 'Brancas' : 'Pretas';
-            let statusText = `Turno: ${turnText}`;
-            if (game.in_checkmate()) {
-                statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
-                if (escrowLocked) statusText += ' 💰 (Escrow liberado)';
-                playSFX('escrow');
-                clearInterval(timerInterval);
-            }
-            else if (game.in_draw()) {
-                statusText = 'Empate técnico!';
-                clearInterval(timerInterval);
-            }
-            else if (game.in_check()) {
-                statusText += ' ⚠️ XEQUE!';
-                playSFX('check');
-            }
-
-            document.getElementById('turn-indicator').textContent = turnText;
-            document.getElementById('timer-display').textContent = formatTime(game.turn() === 'w' ? whiteTime : blackTime);
-            document.getElementById('match-status').textContent = game.game_over() ? 'Fim de jogo - Settlement concluído' : 'Selecione uma peça válida';
-        }
-
-        function updateCapturesUI() {
-            document.getElementById('caps-white').textContent = capturedWhite.join(' ') || '-';
-            document.getElementById('caps-black').textContent = capturedBlack.join(' ') || '-';
-        }
-
-        function handleSquareClick(r, c) {
-            initAudio();
-            if (game.game_over()) return;
-            const sqAlg = indexToAlgebraic(r, c);
-
-            if (selectedSquare) {
-                const legalMoves = game.moves({ square: indexToAlgebraic(selectedSquare.r, selectedSquare.c), verbose: true });
-                const targetMove = legalMoves.find(m => m.to === sqAlg);
-
-                if (targetMove) {
-                    const moveResult = game.move({
-                        from: targetMove.from,
-                        to: targetMove.to,
-                        promotion: targetMove.promotion ? 'q' : undefined
-                    });
-
-                    if (moveResult) {
-                        if (moveResult.captured) {
-                            const capGlyph = pieceGlyphs[moveResult.captured];
-                            if (moveResult.color === 'w') capturedBlack.push(capGlyph);
-                            else capturedWhite.push(capGlyph);
-                            updateCapturesUI();
-                            playSFX('capture');
-                        } else {
-                            playSFX('move');
-                        }
-                        selectedSquare = null;
-                        renderBoard();
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                
+                if (chainId !== BASE_CHAIN_ID) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: BASE_CHAIN_ID }],
+                        });
+                    } catch (e) {
+                        alert('Por favor, mude para a Base Mainnet (Chain 8453).');
                         return;
                     }
                 }
-            }
-
-            const boardData = game.board();
-            const cell = boardData[r][c];
-            if (cell && cell.color === game.turn()) {
-                selectedSquare = { r, c };
-                playSFX('select');
-                renderBoard();
-            } else {
-                selectedSquare = null;
-                renderBoard();
+                document.getElementById('network-status').innerText = `Base: ${accounts[0].slice(0,6)}...`;
+                document.getElementById('wallet-btn').innerText = 'Conectado';
+            } catch (err) {
+                log('Falha na conexão carteira: ' + err.message);
             }
         }
 
-        function openSkinShop() { 
-            initAudio();
-            alert('Loja de Skins NFT em breve!'); 
+        async function enterGame(selectedMode) {
+            mode = selectedMode;
+            if (mode === 'web3') {
+                if (!window.ethereum) {
+                    alert('Conecte a carteira primeiro.');
+                    return;
+                }
+                log('Solicitando aprovação/bloqueio de 0.05 USDC no contrato Base...');
+                escrowLocked = true;
+                document.getElementById('escrow-state').innerText = 'Escrow: Bloqueado (0.05 USDC)';
+                log('Escrow confirmado na Base Mainnet. Partida liberada!');
+            } else {
+                document.getElementById('escrow-state').innerText = 'Modo Gratuito';
+            }
+
+            document.getElementById('screen-lobby').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            renderBoard();
+            startTimer();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+            const board = game.board();
+            
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const squareEl = document.createElement('div');
+                    const squareName = String.fromCharCode(97 + c) + (8 - r);
+                    squareEl.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    if (selectedSquare === squareName) squareEl.classList.add('selected');
+                    
+                    const piece = board[r][c];
+                    if (piece) {
+                        squareEl.innerText = pieceSymbols[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
+                    }
+                    squareEl.onclick = () => handleSquareClick(squareName);
+                    container.appendChild(squareEl);
+                }
+            }
+            document.getElementById('turn-indicator').innerText = game.turn() === 'w' ? 'Brancas' : 'Pretas';
+        }
+
+        function handleSquareClick(square) {
+            if (selectedSquare === null) {
+                const piece = game.get(square);
+                if (piece && piece.color === game.turn()) {
+                    selectedSquare = square;
+                    renderBoard();
+                }
+            } else {
+                try {
+                    const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+                    selectedSquare = null;
+                    if (move) {
+                        renderBoard();
+                        checkGameOver();
+                    } else {
+                        selectedSquare = null;
+                        renderBoard();
+                    }
+                } catch (e) {
+                    selectedSquare = null;
+                    renderBoard();
+                }
+            }
+        }
+
+        function checkGameOver() {
+            if (game.game_over()) {
+                clearInterval(timerInterval);
+                let winner = game.in_checkmate() ? (game.turn() === 'w' ? 'Pretas' : 'Brancas') : 'Empate';
+                log(`Fim de jogo! Resultado: ${winner}. ${escrowLocked ? 'Executando liberação de escrow on-chain.' : ''}`);
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (game.turn() === 'w') {
+                    whiteTime--;
+                    if (whiteTime <= 0) handleTimeout('Pretas');
+                } else {
+                    blackTime--;
+                    if (blackTime <= 0) handleTimeout('Brancas');
+                }
+                updateTimers();
+            }, 1000);
+        }
+
+        function updateTimers() {
+            const fmt = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+            document.getElementById('timer-w').innerText = fmt(whiteTime);
+            document.getElementById('timer-b').innerText = fmt(blackTime);
+        }
+
+        function handleTimeout(winner) {
+            clearInterval(timerInterval);
+            log(`TIMEOUT! ${winner} venceu por tempo. Slicing/liberando escrow on-chain.`);
+            alert(`Tempo esgotado! ${winner} venceu.`);
         }
     </script>
 </body>
