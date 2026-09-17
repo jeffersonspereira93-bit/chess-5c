@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chess 5C Arena | Cyberpunk Edition</title>
+    <!-- Motor FIDE Open Source (chess.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -11,6 +13,7 @@
             --neon-cyan: #00f3ff;
             --neon-purple: #b000ff;
             --neon-green: #00ff66;
+            --neon-red: #ff0055;
             --text-color: #e0e6ed;
             --border-glow: 0 0 10px rgba(0, 243, 255, 0.35);
         }
@@ -33,7 +36,6 @@
 
         .game-hud { width: 100%; max-width: 336px; display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--neon-cyan); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; flex-shrink: 0; }
         
-        /* Padrão Open Source FIDE / Lichess: Contêiner quadrado exato com grid 8x8 rigido */
         .board-wrapper { 
             width: 100%; 
             max-width: 336px; 
@@ -55,7 +57,6 @@
             grid-template-rows: repeat(8, 1fr); 
         }
         
-        /* Célula blindada com aspect ratio 1:1 e sem overflow que mude o tamanho do grid */
         .square { 
             display: flex; 
             align-items: center; 
@@ -75,6 +76,7 @@
         .square.dark { background-color: #111827; }
         .square.selected { background-color: rgba(0, 243, 255, 0.45) !important; box-shadow: inset 0 0 8px var(--neon-cyan); }
         .square.valid-move::after { content: ''; width: 28%; height: 28%; background-color: var(--neon-green); border-radius: 50%; box-shadow: 0 0 6px var(--neon-green); opacity: 0.9; }
+        .square.check-alert { background-color: rgba(255, 0, 85, 0.5) !important; box-shadow: inset 0 0 10px var(--neon-red); }
 
         .hud-bottom { width: 100%; max-width: 336px; display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: #8a99ad; flex-shrink: 0; }
         .captures-row { display: flex; justify-content: space-between; background: var(--panel-bg); border: 1px solid rgba(0, 243, 255, 0.2); padding: 5px 8px; border-radius: 6px; min-height: 26px; align-items: center; }
@@ -118,14 +120,18 @@
     <footer>Chess 5C Arena &bull; Web3 Protocol &bull; Cyberpunk Edition</footer>
 
     <script>
-        let boardState = [];
+        let game = new Chess();
         let selectedSquare = null;
-        let currentTurn = 'white';
         let validMoves = [];
         let capturedWhite = [];
         let capturedBlack = [];
         let userAddress = null;
         let activeMode = 'friendly';
+
+        const pieceGlyphs = {
+            p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+            P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
+        };
 
         async function connectWallet() {
             if (window.ethereum) {
@@ -149,22 +155,6 @@
             }
         }
 
-        async function initBoardData() {
-            boardState = [
-                ["♜","♞","♝","♛","♚","♝","♞","♜"],
-                ["♟","♟","♟","♟","♟","♟","♟","♟"],
-                ["","","","","","","",""],
-                ["","","","","","","",""],
-                ["","","","","","","",""],
-                ["","","","","","","",""],
-                ["♙","♙","♙","♙","♙","♙","♙","♙"],
-                ["♖","♘","♗","♕","♔","♗","♘","♖"]
-            ];
-            capturedWhite = [];
-            capturedBlack = [];
-            updateCapturesUI();
-        }
-
         async function enterGame(mode) {
             activeMode = mode;
             if (mode === 'competitive') {
@@ -174,7 +164,10 @@
             }
             document.getElementById('screen-lobby').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
-            await initBoardData();
+            game.reset();
+            capturedWhite = [];
+            capturedBlack = [];
+            updateCapturesUI();
             renderBoard();
         }
 
@@ -183,94 +176,70 @@
             document.getElementById('screen-lobby').classList.remove('hidden');
         }
 
-        function isWhitePiece(p) { return "♙♖♘♗♕♔".includes(p); }
-        function isBlackPiece(p) { return "♟♜♞♝♛♚".includes(p); }
+        function algebraicToIndex(sq) {
+            const file = sq.charCodeAt(0) - 'a'.charCodeAt(0);
+            const rank = 8 - parseInt(sq[1], 10);
+            return { r: rank, c: file };
+        }
 
-        function getValidMoves(r, c) {
-            const piece = boardState[r][c];
-            if (!piece) return [];
-            const isWhite = isWhitePiece(piece);
-            const moves = [];
-            const dir = isWhite ? -1 : 1;
+        function indexToAlgebraic(r, c) {
+            const file = String.fromCharCode('a'.charCodeAt(0) + c);
+            const rank = 8 - r;
+            return file + rank;
+        }
 
-            if (piece === '♙' || piece === '♟') {
-                const r1 = r + dir;
-                if (r1 >= 0 && r1 < 8 && boardState[r1][c] === "") {
-                    moves.push({r: r1, c: c});
-                    const startRow = isWhite ? 6 : 1;
-                    const r2 = r + 2 * dir;
-                    if (r === startRow && boardState[r2][c] === "") moves.push({r: r2, c: c});
-                }
-                [c - 1, c + 1].forEach(targetC => {
-                    const r1 = r + dir;
-                    if (r1 >= 0 && r1 < 8 && targetC >= 0 && targetC < 8) {
-                        const target = boardState[r1][targetC];
-                        if (target && isWhitePiece(target) !== isWhite) moves.push({r: r1, c: targetC});
-                    }
-                });
-            } else if (piece === '♘' || piece === '♞') {
-                const knightSteps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-                knightSteps.forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                        const target = boardState[nr][nc];
-                        if (!target || isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
-                    }
-                });
-            } else if (piece === '♔' || piece === '♚') {
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        if (dr === 0 && dc === 0) continue;
-                        const nr = r + dr, nc = c + dc;
-                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                            const target = boardState[nr][nc];
-                            if (!target || isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
-                        }
-                    }
-                }
-            } else {
-                const dirs = [];
-                if ("♖♜♕♛".includes(piece)) dirs.push([-1,0],[1,0],[0,-1],[0,1]);
-                if ("♗♝♕♛".includes(piece)) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
-                dirs.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                        const target = boardState[nr][nc];
-                        if (!target) {
-                            moves.push({r: nr, c: nc});
-                        } else {
-                            if (isWhitePiece(target) !== isWhite) moves.push({r: nr, c: nc});
-                            break;
-                        }
-                        nr += dr; nc += dc;
-                    }
-                });
-            }
-            return moves;
+        function getValidMovesForUI(r, c) {
+            const sqAlg = indexToAlgebraic(r, c);
+            const moves = game.moves({ square: sqAlg, verbose: true });
+            return moves.map(m => algebraicToIndex(m.to));
         }
 
         function renderBoard() {
             const boardEl = document.getElementById('board-container');
             boardEl.innerHTML = '';
+            const boardData = game.board();
+            const legalMovesUI = selectedSquare ? getValidMovesForUI(selectedSquare.r, selectedSquare.c) : [];
+
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const sq = document.createElement('div');
                     const isLight = (r + c) % 2 === 0;
                     sq.className = `square ${isLight ? 'light' : 'dark'}`;
-                    const piece = boardState[r][c];
-                    if (piece) {
-                        sq.textContent = piece;
-                        const isW = isWhitePiece(piece);
+                    
+                    const cell = boardData[r][c];
+                    if (cell) {
+                        const glyph = pieceGlyphs[cell.color === 'w' ? cell.type.toUpperCase() : cell.type];
+                        sq.textContent = glyph;
+                        const isW = cell.color === 'w';
                         sq.style.color = isW ? '#e0e6ed' : '#00f3ff';
                         sq.style.textShadow = isW ? '0 0 3px rgba(224,230,237,0.6)' : '0 0 5px rgba(0,243,255,0.85)';
+                        
+                        // Alerta de rei em xeque
+                        if (cell.type === 'k' && game.in_check() && cell.color === game.turn()) {
+                            sq.classList.add('check-alert');
+                        }
                     }
-                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) sq.classList.add('selected');
-                    if (validMoves.some(m => m.r === r && m.c === c)) sq.classList.add('valid-move');
+
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+                        sq.classList.add('selected');
+                    }
+                    if (legalMovesUI.some(m => m.r === r && m.c === c)) {
+                        sq.classList.add('valid-move');
+                    }
+
                     sq.onclick = () => handleSquareClick(r, c);
                     boardEl.appendChild(sq);
                 }
             }
-            document.getElementById('turn-indicator').textContent = 'Turno: ' + (currentTurn === 'white' ? 'Brancas' : 'Pretas');
+
+            const turnText = game.turn() === 'w' ? 'Brancas' : 'Pretas';
+            let statusText = `Turno: ${turnText}`;
+            if (game.in_checkmate()) statusText = `Xeque-mate! ${turnText === 'w' ? 'Pretas' : 'Brancas'} venceram!`;
+            else if (game.in_draw()) statusText = 'Empate (Afogamento/Repetição)!';
+            else if (game.in_check()) statusText += ' ⚠️ XEQUE!';
+
+            document.getElementById('turn-indicator').textContent = statusText;
+            document.getElementById('match-status').textContent = game.in_checkmate() ? 'Fim de jogo' : 'Selecione uma peça válida';
         }
 
         function updateCapturesUI() {
@@ -279,42 +248,43 @@
         }
 
         function handleSquareClick(r, c) {
-            const p = boardState[r][c];
-            const myTurnIsWhite = currentTurn === 'white';
+            const sqAlg = indexToAlgebraic(r, c);
 
-            if (selectedSquare && validMoves.some(m => m.r === r && m.c === c)) {
-                const targetPiece = boardState[r][c];
-                const movingPiece = boardState[selectedSquare.r][selectedSquare.c];
+            if (selectedSquare) {
+                const legalMoves = game.moves({ square: indexToAlgebraic(selectedSquare.r, selectedSquare.c), verbose: true });
+                const targetMove = legalMoves.find(m => m.to === sqAlg);
 
-                if (targetPiece) {
-                    if (isWhitePiece(targetPiece)) capturedWhite.push(targetPiece);
-                    else capturedBlack.push(targetPiece);
-                    updateCapturesUI();
-                    document.getElementById('match-status').textContent = `⚡ Derrubou ${targetPiece}!`;
-                } else {
-                    document.getElementById('match-status').textContent = `Movimento tático executado`;
+                if (targetMove) {
+                    // Promoção automática para Dama (Q) por padrão ágil
+                    const moveResult = game.move({
+                        from: targetMove.from,
+                        to: targetMove.to,
+                        promotion: targetMove.promotion ? 'q' : undefined
+                    });
+
+                    if (moveResult) {
+                        if (moveResult.captured) {
+                            const capGlyph = pieceGlyphs[moveResult.captured];
+                            if (moveResult.color === 'w') capturedBlack.push(capGlyph);
+                            else capturedWhite.push(capGlyph);
+                            updateCapturesUI();
+                        }
+                        selectedSquare = null;
+                        renderBoard();
+                        return;
+                    }
                 }
+            }
 
-                boardState[r][c] = movingPiece;
-                boardState[selectedSquare.r][selectedSquare.c] = "";
+            const boardData = game.board();
+            const cell = boardData[r][c];
+            if (cell && cell.color === game.turn()) {
+                selectedSquare = { r, c };
+                renderBoard();
+            } else {
                 selectedSquare = null;
-                validMoves = [];
-                currentTurn = currentTurn === 'white' ? 'black' : 'white';
                 renderBoard();
-                return;
             }
-
-            if (p && ((isWhitePiece(p) && myTurnIsWhite) || (isBlackPiece(p) && !myTurnIsWhite))) {
-                selectedSquare = {r, c};
-                validMoves = getValidMoves(r, c);
-                document.getElementById('match-status').textContent = `Unidade selecionada [${r+1},${c+1}] (${validMoves.length} alvos)`;
-                renderBoard();
-                return;
-            }
-
-            selectedSquare = null;
-            validMoves = [];
-            renderBoard();
         }
 
         function openSkinShop() { alert('Loja de Skins NFT em breve!'); }
