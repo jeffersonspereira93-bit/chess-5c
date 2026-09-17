@@ -1,0 +1,10 @@
+{
+  "totalMatches": 200,
+  "draws": 178,
+  "wins": {
+    "w": 13,
+    "b": 9
+  },
+  "avgTurns": 139,
+  "anomalies": []
+}
