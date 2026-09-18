@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { dispatchOnChainAction } from './zion-signer.mjs';
 
 export class ZionExecutor {
   constructor(configPath = './config.json') {
@@ -36,10 +37,18 @@ export class ZionExecutor {
       }
     }
 
+    // Executa tentativa de dispatch se houver chave configurada
+    const liveExecutionResults = [];
+    for (const d of dispatches) {
+      const res = await dispatchOnChainAction(d, this.config);
+      liveExecutionResults.push({ item: d.type, result: res });
+    }
+
     return {
       timestamp: Date.now(),
       wallet: walletAddress,
-      separatedDispatches: dispatches
+      separatedDispatches: dispatches,
+      liveExecutionResults
     };
   }
 }
