@@ -1,0 +1,12 @@
+{
+  "name": "zion-trade",
+  "version": "1.0.0",
+  "description": "Zion Hybrid Tactical & Yield Agent",
+  "main": "agent/zion-agent.mjs",
+  "scripts": {
+    "test": "node tests/agent.test.mjs"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
