@@ -1,42 +1,35 @@
 import fs from 'fs';
-import { ZionTradeAgent } from './zion-agent.mjs';
-
-const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+import { createWalletClient, http, parseEther } from 'viem';
+import { base } from 'viem/chains';
+import { privateKeyToAccount } from 'viem/accounts';
 
 export class ZionExecutor {
-    constructor() {
-        this.agent = new ZionTradeAgent({ riskProfile: 'hybrid', rpcUrl: config.rpcUrl });
+  constructor(configPath = './config.json') {
+    this.config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  }
+
+  evaluateRisk(signal) {
+    if (!signal || !signal.action) return { allowed: false, reason: 'SCHEMA_INVALID' };
+    if (signal.action === 'HOLD') return { allowed: true, reason: 'HOLD_STATE' };
+    if (signal.expectedLoss > 2.0) return { allowed: false, reason: 'EXCEEDS_MAX_DRAWDOWN_CAP' };
+    return { allowed: true, reason: 'RISK_PASSED' };
+  }
+
+  async executeCycle(signal, walletAddress) {
+    const riskCheck = this.evaluateRisk(signal);
+    if (!riskCheck.allowed) {
+      return { executed: false, reason: riskCheck.reason };
     }
-
-    async executeCycle(rawSignal, walletAddress, amountOverride, lossOverride) {
-        console.log(`⚡ [ZION-EXEC] Processando ciclo para carteira ${walletAddress}...`);
-        const decision = await this.agent.processTick(rawSignal, amountOverride, lossOverride);
-
-        if (decision.status !== 'VALIDATED') {
-            console.warn(`🛡️ [ZION-EXEC] Execução suspensa/bloqueada: ${decision.error || decision.action}`);
-            return { executed: false, reason: decision.error || 'HOLD_OR_BLOCKED', decision };
-        }
-
-        // Se validado, monta intent assianável / payload on-chain para Base / Aerodrome / Vault
-        const intentPayload = {
-            targetVault: config.tacticalVault,
-            action: decision.action,
-            amount: decision.amount,
-            expectedLoss: decision.expectedLoss,
-            chainId: config.chainId,
-            executorWallet: walletAddress,
-            timestamp: Date.now()
-        };
-
-        console.log('✅ [ZION-EXEC] Intent tática validada e empacotada:', intentPayload);
-        return { executed: true, intentPayload, decision };
-    }
-}
-
-// Auto-teste do executor
-if (import.meta.url === `file://${process.argv}`) {
-    const exec = new ZionExecutor();
-    const res = await exec.executeCycle({ action: 'LONG', confidence: 0.95, amount: 40, expectedLoss: 2 }, '0xHUB_WALLET_ADDRESS_BASE');
-    fs.writeFileSync('zion-execution-last.json', JSON.stringify(res, null, 2));
-    console.log('📄 Log do último ciclo gravado.');
+    const intentPayload = {
+      targetVault: this.config.tacticalVault,
+      action: signal.action,
+      amount: signal.amount,
+      expectedLoss: signal.expectedLoss,
+      chainId: this.config.chainId,
+      executorWallet: walletAddress,
+      priceUsd: signal.priceUsd || 0,
+      timestamp: Date.now()
+    };
+    return { executed: true, intentPayload, reason: 'INTENT_READY_FOR_DISPATCH' };
+  }
 }
