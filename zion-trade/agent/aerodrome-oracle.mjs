@@ -1,39 +1,70 @@
-export async function fetchRealAssetSignal(symbol, address) {
-  // Simulação de preço spot ancorada na realidade operacional da Base/Aerodrome
+export async function fetchRealAssetSignal(symbol, address, baseReferencePrice = null) {
+  // Simulação / Leitura spot (pode ser substituída por RPC real da pool WETH/USDC e AERO/USDC)
   const mockSpot = {
-    WETH: 3250.0 + (Math.random() * 50 - 25),
-    AERO: 1.15 + (Math.random() * 0.10 - 0.05),
+    WETH: 3250.0,
+    AERO: 1.15,
     USDC: 1.0
   };
 
-  const price = mockSpot[symbol] || 1.0;
-  const delta = Math.random();
+  const spot = mockSpot[symbol] || 1.0;
+  const delta = Math.random(); // variação simulada de 1h
 
   if (symbol === 'LP_USDC_WETH') {
-    // Avalia range de liquidez concentrada (ex: +-5% ou +-8% do spot)
-    const lowerRange = price * 0.94;
-    const upperRange = price * 1.06;
-    const volatilityScore = Math.abs(delta - 0.5); // 0 a 0.5
-    const viability = volatilityScore < 0.35 ? 'VIABLE_RANGE' : 'OUT_OF_BOUNDS_WARNING';
+    // ±5% rigoroso de range de liquidez concentrada
+    const lowerRange = spot * 0.95;
+    const upperRange = spot * 1.05;
     
+    // Simula se o preço atual está dentro da faixa de ±5%
+    const currentPriceInPool = spot * (1 + (delta - 0.5) * 0.08);
+    const inBounds = currentPriceInPool >= lowerRange && currentPriceInPool <= upperRange;
+
     return {
-      action: viability === 'VIABLE_RANGE' ? 'HOLD_LP_RANGE' : 'REBALANCE_RANGE',
-      confidence: 0.92,
-      range: { lower: lowerRange.toFixed(2), upper: upperRange.toFixed(2), spot: price.toFixed(2) },
-      viability,
-      expectedLoss: 0.8
+      asset: 'LP_USDC_WETH',
+      engine: 'CONCENTRATED_LIQUIDITY',
+      rangeAmplitude: '±5%',
+      lower: lowerRange.toFixed(4),
+      upper: upperRange.toFixed(4),
+      spot: spot.toFixed(4),
+      action: inBounds ? 'HOLD_LP_RANGE' : 'REBALANCE_LP_5PCT',
+      confidence: 0.95,
+      expectedLoss: 0.5
     };
   }
 
   if (symbol === 'AERO') {
-    // Swing trade / acumulação baseada em desvio expressivo
-    if (delta > 0.85) {
-      return { action: 'SELL_AERO_PEAK', confidence: 0.89, amount: 50, expectedLoss: 1.5, priceUsd: price, mode: 'SWING_DISTRIBUTE' };
-    } else if (delta < 0.15) {
-      return { action: 'BUY_AERO_VALLEY', confidence: 0.93, amount: 60, expectedLoss: 1.5, priceUsd: price, mode: 'SWING_ACCUMULATE' };
+    // Simula variação percentual de preço recente do AERO (ex: queda de 7% ou alta de 11%)
+    // Simulador estocástico controlado para testes de banda
+    const priceChangePct = (delta * 0.22) - 0.10; // varia entre -10% e +12%
+    const simulatedAeroPrice = spot * (1 + priceChangePct);
+
+    let tacticalAction = 'HOLD_AERO_CORE';
+    let mode = 'NEUTRAL';
+    let sizeUsdc = 0;
+
+    if (priceChangePct <= -0.05) {
+      // Queda ≥ 5% até 9%+: Momento calmo de compra/acumulação com USDC de caixa
+      tacticalAction = 'BUY_AERO_VALLEY';
+      mode = 'ACCUMULATE_SAFE';
+      sizeUsdc = 100; // tamanho tático modular em USDC
+    } else if (priceChangePct >= 0.10) {
+      // Alta ≥ 10% / 11%+: Momento de realização parcial / venda para USDC
+      tacticalAction = 'SELL_AERO_PEAK';
+      mode = 'DISTRIBUTE_PROFIT';
+      sizeUsdc = 100;
     }
-    return { action: 'HOLD_AERO_CORE', confidence: 1.0, amount: 0, expectedLoss: 0, priceUsd: price, mode: 'HOLD' };
+
+    return {
+      asset: 'AERO',
+      engine: 'SWING_TACTICAL',
+      changePct: (priceChangePct * 100).toFixed(2) + '%',
+      priceUsd: simulatedAeroPrice.toFixed(4),
+      action: tacticalAction,
+      mode,
+      amountUsdcToRotate: sizeUsdc,
+      confidence: 0.91,
+      expectedLoss: 1.0
+    };
   }
 
-  return { action: 'HOLD', confidence: 1.0, amount: 0, expectedLoss: 0, priceUsd: price };
+  return { action: 'HOLD', confidence: 1.0 };
 }
