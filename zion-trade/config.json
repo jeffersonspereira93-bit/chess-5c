@@ -2,7 +2,13 @@
   "network": "base-mainnet",
   "chainId": 8453,
   "rpcUrl": "https://mainnet.base.org",
-  "usdcAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "pollIntervalMs": 3600000,
+  "walletAddress": "0xHUB_WALLET_ADDRESS_BASE",
+  "assets": {
+    "WETH": { "address": "0x4200000000000000000000000000000000000006", "role": "core/tactical" },
+    "USDC": { "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "role": "settlement/yield" },
+    "AERO": { "address": "0x940181a94a35a4569e3e29a1c67b718c86ebba57", "role": "farm/tactical" }
+  },
   "aerodromeRouter": "0xcF77a3Ba9A5CA399B7c97c73d540223bfa407553",
   "tacticalVault": "0x0000000000000000000000000000000000000000"
 }
