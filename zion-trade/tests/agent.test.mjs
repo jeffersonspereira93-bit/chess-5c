@@ -1,7 +1,7 @@
 import { ZionTradeAgent } from '../agent/zion-agent.mjs';
 import fs from 'fs';
 
-console.log('🛡️ [ZION-TRADE QA] Iniciando validação de guardrails...');
+console.log('🛡️ [ZION-TRADE QA] Validando agente com contexto on-chain da Base...');
 const agent = new ZionTradeAgent({ riskProfile: 'hybrid' });
 
 const testCases = [
@@ -11,15 +11,15 @@ const testCases = [
 ];
 
 let passed = 0;
-testCases.forEach((tc, idx) => {
-    const res = agent.processTick(tc.signal, tc.amount, tc.loss);
+for (const [idx, tc] of testCases.entries()) {
+    const res = await agent.processTick(tc.signal, tc.amount, tc.loss);
     if (res.status === tc.expected) {
-        console.log(`✅ [TEST #${idx+1}] Passou (${res.status})`);
+        console.log(`✅ [TEST #${idx+1}] Passou (${res.status}, bloco/ts: ${res.block})`);
         passed++;
     } else {
         console.error(`❌ [TEST #${idx+1}] Falhou. Esperado ${tc.expected}, obtido ${res.status}`);
     }
-});
+}
 
 const report = {
     timestamp: new Date().toISOString(),
@@ -29,5 +29,5 @@ const report = {
 };
 
 fs.writeFileSync('zion-trade-report.json', JSON.stringify(report, null, 2));
-console.log('📊 Relatório salvo em zion-trade-report.json');
+console.log('📊 Relatório atualizado em zion-trade-report.json');
 if (passed !== testCases.length) process.exit(1);
