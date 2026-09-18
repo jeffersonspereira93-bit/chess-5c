@@ -13,7 +13,7 @@ const testCases = [
 ];
 
 let passed = 0;
-for (const [idx, tc] of testCases.entries()] {
+for (const [idx, tc] of testCases.entries()) {
     const res = await agent.processTick(tc.input, tc.override?.amount, tc.override?.loss);
     const match = res.status === tc.expectedStatus || (tc.expectedStatus === 'OK' && res.action === 'HOLD');
     if (match) {

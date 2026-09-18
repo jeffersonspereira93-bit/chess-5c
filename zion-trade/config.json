@@ -1,0 +1,8 @@
+{
+  "network": "base-mainnet",
+  "chainId": 8453,
+  "rpcUrl": "https://mainnet.base.org",
+  "usdcAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "aerodromeRouter": "0xcF77a3Ba9A5CA399B7c97c73d540223bfa407553",
+  "tacticalVault": "0x0000000000000000000000000000000000000000"
+}
