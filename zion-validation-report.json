@@ -1,14 +1,14 @@
 {
-  "timestamp": "2026-09-18T00:47:52.491Z",
+  "timestamp": "2026-09-18T17:04:58.694Z",
   "fideRulesValid": true,
   "matchesSimulated": 100,
   "anomalies": [],
   "stats": {
-    "draws": 99,
+    "draws": 97,
     "wins": {
-      "w": 1,
-      "b": 0
+      "w": 2,
+      "b": 1
     },
-    "avgTurns": 99
+    "avgTurns": 100
   }
 }
